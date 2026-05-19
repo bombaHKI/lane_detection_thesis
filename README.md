@@ -1,9 +1,7 @@
-[![CI status](https://github.com/mcserep/elteikthesis/actions/workflows/ci.yml/badge.svg)](https://github.com/mcserep/elteikthesis/actions/workflows/ci.yml)
-[![Overleaf template](https://img.shields.io/badge/Overleaf-ELTE%20FI%20Thesis%20Template-brightgreen)](https://www.overleaf.com/latex/templates/elte-fi-thesis-template/scjzzzbjvwfz)
 
-See [Hungarian version](README_hu.md).
 
 # ELTE FI bachelor and master thesis template
+From: https://github.com/mcserep/elteikthesis
 
 The [elteikthesis_en.tex](elteikthesis_en.tex) and the produced [elteikthesis_en.pdf](elteikthesis_en.pdf) serves as an example of usage.
 This class template enforces the required formatting rules for bachelor and master theses and generates the cover page given on the provided metadata. The chapters of the example document follows the typical structure of a BSc thesis.
