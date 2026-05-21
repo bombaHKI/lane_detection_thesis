@@ -487,7 +487,7 @@
 				& {\sc \large \makecell{\deptname}}
 			\end{tabular}
 
-			\vspace{5.0cm}
+			\vspace{2.5cm}
 			{\bf \LARGE \thesistitle \par}
 			\vspace{4.0cm}
 
@@ -512,19 +512,14 @@
 				\end{tabular}
 			\else
 				\vspace{1.0cm}
-				\begin{tabular}{ l c l }
-					{\it \large \suplabel:} &
-					\hspace{4.0cm} &
-					{\it \large \authorlabel:}\\
-
-					{\large \supname} &
-					\hspace{4.0cm} &
+				\begin{flushleft}
+					{\it \large \authorlabel:}\\[0.2cm]
 					{\large \authorname}\\
-
-					\supaff &
-					\hspace{4.0cm} &
-					\degreename\\
-				\end{tabular}
+					\degreename\\[1.0cm]
+					{\it \large \suplabel:}\\[0.2cm]
+					{\large \supname}\\
+					\supaff
+				\end{flushleft}
 			\fi
 
 			\vfill

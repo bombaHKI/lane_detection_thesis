@@ -1,0 +1,81 @@
+\chapter{Introduction}
+\label{ch:intro}
+
+\section{Motiváció}
+\label{sec:motivation}
+
+A térképek eredetileg emberi navigációs célokra készültek. A korai térképek jellemzően kézi rajzolással készültek, ahol a geometriai pontosság erősen függött a méretaránytól és a rajzolási konvencióktól. Egy ilyen reprezentációban akár egy ceruzavonal vastagságnyi eltérés is több tíz vagy akár száz kilométeres valós bizonytalanságot jelenthetett.
+
+A térképkészítés digitalizációja jelentős előrelépést hozott, mivel lehetővé tette a folyamatos skálázhatóságot és a geometriai pontosság növelését. A modern digitális térképek (pl.\ GPS-alapú rendszerek) már műholdas és szenzoros mérésekre támaszkodnak, azonban ezek a rendszerek továbbra is hordoznak mérési bizonytalanságokat, illetve nem minden térképi pont esetében áll rendelkezésre közvetlen mérés, ami lokális geometriai torzulásokhoz vezethet.
+
+Ezek a térképek elsősorban általános felhasználási esetekre készülnek, például:
+\begin{itemize}
+    \item emberi navigáció,
+    \item helyek keresése és POI-alapú szolgáltatások,
+    \item útvonaltervezés és közlekedési információk,
+    \item turisztikai és location-based szolgáltatások,
+    \item előzetes tervezési feladatok,
+    \item alacsony--közepes pontosságot igénylő mérnöki alkalmazások.
+\end{itemize}
+
+Ezen alkalmazások többsége nem igényel méteresnél finomabb pontosságot. Például az OpenStreetMap adatok pozicionális pontosságát több tanulmány is körülbelül 1--2 méteres nagyságrendbe sorolja, azonban ez erősen regionálisan változó, mivel crowdsourced adatbázisról van szó~\cite{osmaccuracy}.
+
+Összehasonlításképpen egy autópálya sáv szélessége jellemzően ${\sim}3{,}5$ méter, így egy átlagos 1--2 méteres térképi hiba a sáv geometriájának akár jelentős részét is lefedheti, ami már nem elfogadható olyan alkalmazásoknál, ahol sávszintű döntések szükségesek.
+
+Ezzel szemben az autonóm járművek és fejlett vezetéstámogató rendszerek (ADAS) már nagyságrendekkel pontosabb térképi reprezentációt igényelnek. A HD (High Definition) térképek célja, hogy centiméteres pontosságú geometriai és szemantikus információkat biztosítsanak a jármű lokalizációjához és tervezéséhez.\todo{citation needed}
+
+A HD térképek lehetővé teszik, hogy a jármű ne kizárólag a valós idejű szenzoradatokra támaszkodjon, hanem egy előre felépített, nagy pontosságú térképi reprezentációt is használjon a lokalizáció és tervezés támogatására. Ez különösen fontos olyan helyzetekben, ahol a szenzoros észlelés korlátozott, például takart látómező esetén (pl.\ nagy járművek mögötti rejtett objektumok), vagy rossz időjárási körülmények között.\todo{ide érdemes egy konkrét AV perception / occlusion paper}
+
+A HD térképek egyik ipari példája a TomTom által fejlesztett Orbis Map rendszer, amely több rétegből álló nagy pontosságú térképi infrastruktúrát biztosít. A TomTom egy holland location technology vállalat, amely HD térképeket és kapcsolódó szolgáltatásokat nyújt autógyártók és mobilitási cégek számára.\todo{TomTom / Orbis Map citation needed}
+
+Az Orbis Map felépítéséhez különböző adatokat használnak, melyek adatszerzési költségükben és pontosságukban is eltérnek. Például SDO (Sensor Derived Observations) és egyéb szenzoros és térképi adatokat, amelyek lehetnek saját gyűjtésűek vagy külső partnerektől származók. A térkép egyik kulcsrétege a HD Basemap, amelynek célja a sávgeometriák és úthálózati elemek centiméteres pontosságú reprezentációja, jellemzően ${\sim}10$--20 cm-es geometriai hibahatárral.
+
+A vállalat HD Basemap rétegének előállítása többféle adatforrás és feldolgozási lépés kombinációjával történik. A legnagyobb pontosságú adatokat a MoMa (Mobile Mapping) rendszer biztosítja, amely LiDAR szenzorokkal, panorámakamerákkal, GNSS-szel és inerciális mérőegységekkel felszerelt mérőjárműveket használ. A LiDAR pontfelhőkből előállított LRI (Linear Referencing Images) és LBEM (LiDAR Bird's Eye Mosaic) reprezentációk lehetővé teszik az útfelfestések és sávszegélyek nagy pontosságú detektálását. Az LBEM egy felülnézeti, raszterizált 2D reprezentáció, amely a MoMa LiDAR pontfelhőinek talajsíkra történő vetítésével készül. Az előállítás során a MoMa jármű LiDAR méréseket, trajektória- és kalibrációs adatokat gyűjt, majd az egyes pixelek egy adott méretű (tipikusan 5 cm felbontású) térbeli cellába eső lézerpontok statisztikai jellemzőit reprezentálják.
+
+\begin{table}[h]
+    \centering
+    \footnotesize
+    \caption{A MoMa és SDO adatforrások összehasonlítása.}
+    \label{tab:moma_sdo}
+    \begin{tabular}{|p{2.5cm}|p{5.5cm}|p{5.5cm}|}
+        \hline
+        & \textbf{MoMa (Mobile Mapping)} & \textbf{SDO} \\
+        \hline
+        \textbf{Vehicles} &
+        TomTom's own survey vans with high-end sensor rigs ($360^\circ$ Ladybug cameras, LiDAR/Velodyne, precision GNSS/IMU) &
+        Consumer/fleet vehicles with simpler sensors (typically front-facing ADAS camera, e.g.\ MobileEye) \\
+        \hline
+        \textbf{A ``session''} &
+        One continuous recording run by a MoMa van, producing panoramic imagery, LiDAR point clouds, and precise trajectories &
+        One drive's worth of sensor-derived feature observations (signs, lanes, road borders) --- not raw imagery \\
+        \hline
+        \textbf{Quality} &
+        Survey-grade accuracy with PPK post-processing; serves as \textbf{ground truth} &
+        Lower individual accuracy (elevation drift, miscategorized signs, no heading on some features) --- but improved through aggregation across many passes \\
+        \hline
+        \textbf{Scale} &
+        Limited to where TomTom schedules collection drives &
+        Massive --- hundreds of millions of observations daily across many countries from production vehicle fleets \\
+        \hline
+        \textbf{Primary use} &
+        High-quality map production, ground-truth validation, traffic light/sign observation creation (Rajali) &
+        Broad coverage map updates, change detection, speed limit updates, lane data at scale \\
+        \hline
+    \end{tabular}
+\end{table}
+
+A MoMa rendszer ugyan centiméteres pontosságot biztosít, azonban globális skálán rendkívül költséges lenne kizárólag ilyen precíziós mérésekre támaszkodni. Emiatt a HD Basemap jelentős része SDO és egyéb, alacsonyabb költségű, nem precíziós mérési források felhasználásával készül. Az SDO kameraközpontú megközelítést alkalmaz, amely stereo kamerák, vizuális odometria és mélytanuló modellek segítségével nyer ki útelemeket a képi adatokból. Ez a megoldás lényegesen jobban skálázható, így lehetővé teszi a térképi lefedettség kiterjesztését nagy úthálózatokra és globális szintre.
+
+A HD Basemap előállítása egy többlépcsős, coarse-to-fine pipeline mentén történik. Első lépésként a különböző forrásokból származó adatokat közös koordinátarendszerbe illesztik, amelyhez LiDAR-alapú source-to-source alignment és SLAM technikákat alkalmaznak. Ezt követi a perception réteg, ahol mélytanuló modellek detektálják a sávhatárokat, útfelfestéseket és egyéb közlekedési elemeket a LiDAR és kameraképek alapján. Az így kinyert geometriai elemeket egy fusion komponens egyesíti, amely bipartite matching algoritmusokkal és megbízhatósági súlyokkal kombinálja a különböző forrásokból származó megfigyeléseket.
+
+A végső HD lane modell előállításához a rendszer az SD (Standard Definition) térképi topológiát használja kiindulási alapként, amelyet a pontosabb szenzoros megfigyelésekkel finomít. Az automatizált folyamatot a HAPT (Human Assisted Production Tooling) támogatja, ahol operátorok manuálisan ellenőrzik és javítják a bizonytalan eseteket. Az eredmény egy nagy pontosságú HD Basemap réteg, amely tartalmazza a sávgeometriákat, útfelfestéseket és egyéb lane-level közlekedési információkat.
+
+Az így előállított HD térképek minőségét többféle metrika segítségével ellenőrzik annak érdekében, hogy megfeleljenek az elvárt pontossági követelményeknek. A legfontosabb mérőszámok közé tartozik az \textit{Absolute Positional Accuracy} (APA) és a \textit{Relative Positional Accuracy} (RPA), amelyek a sávhatároló geometriák pontosságát vizsgálják egy manuálisan előállított ground truth adatbázis segítségével.
+
+A validáció során előre meghatározott helyeken az út irányára merőleges szakaszokat, úgynevezett \textit{cross-section}öket definiálnak. Ezeket a cross-section vonalakat az annotátorok geo-hivatkozott LBEM képekre vetítik rá, majd megjelölik azokat a pontokat, ahol a vonal metszi a sávhatárokat. A jelölések nemcsak fizikai útburkolati jelekhez tartozhatnak, hanem virtuális sávhatárokhoz is --- például szaggatott vonalak vagy részben hiányzó felfestések esetén. Így minden cross-sectionhöz egy ground truth pontkészlet tartozik.
+
+A HD Basemap validációja során ugyanezen cross-sectionök és a térképen tárolt sávhatároló geometriák metszéspontjait is meghatározzák. A ground truth és a térképi metszéspontok összehasonlításából számíthatók az APA és RPA metrikák. Az APA a sávhatárolók abszolút eltérését méri a valós világhoz képest, míg az RPA a sávszélességek pontosságát vizsgálja, vagyis azt, hogy a szomszédos sávhatárolók közötti távolság mennyire egyezik a valósággal.
+
+A ground truth adatbázis előállítása azonban több problémát is felvet. Egyrészt az LBEM reprezentáció LiDAR pontfelhőből származó raszteresített képként jön létre, amely esetén a pontfelhő pixelesítése információvesztéssel és geometriai pontatlanságokkal járhat. Másrészt a manuális annotáció jelentős emberi erőforrást igényel, ezért idő- és költségigényes folyamat. A szakirodalomban kimutatták, hogy még egyszerű annotációs interfész-módosítások is jelentős hatékonyságnövekedést eredményezhetnek: például az \textit{Extreme Clicking} megközelítésben előre generált javaslatok nélkül is akár ötszörös gyorsulást értek el a hagyományos bounding box annotációhoz képest~\cite{papadopoulos2017extreme}.
+
+A dolgozatban bemutatott megközelítés erre a problémára kíván megoldást adni egy előre összefűzött LiDAR pontfelhőket feldolgozó pipeline segítségével. A cél a sávhatárolók közvetlen, vektoros reprezentációjának előállítása, amely lehetővé teszi a cross-sectionök és a sávhatároló geometriák metszéspontjainak automatikus meghatározását. Ennek eredményeként a ground truth pontok automatikusan generálhatók lennének, így az annotátorok feladata a javasolt pontok ellenőrzésére és szükség szerinti javítására korlátozódna. Ez jelentősen csökkentheti a manuális annotáció költségét és növelheti a validációs folyamat skálázhatóságát.
