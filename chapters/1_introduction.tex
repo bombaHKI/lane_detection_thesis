@@ -8,42 +8,33 @@ Maps were originally developed to support human navigation. Early cartographic r
 
 The digitalization of cartography represented a major step forward, enabling continuous scalability and improved geometric precision. Modern digital maps increasingly rely on satellite imagery and sensor-based measurements. However, these systems still contain measurement uncertainties, and not every map feature is directly observed. As a result, local geometric distortions may still occur.
 
-These maps are primarily designed for general-purpose applications, including:
-
-\begin{itemize}
-    \item human navigation,
-    \item location search and point-of-interest (POI)-based services,
-    \item route planning and traffic information systems,
-    \item tourism and location-based services,
-    \item engineering applications requiring low to medium positional accuracy.
-\end{itemize}
+These maps are primarily designed for general-purpose applications, such as human navigation; location search and Point-of-Interest (POI)-based services; route planning and traffic information systems; tourism; and engineering applications requiring low to medium positional accuracy.
 
 Most of these use cases do not require sub-meter accuracy. For instance, the positional accuracy of OpenStreetMap data is typically on the order of 1–2 meters, although this varies significantly across regions due to its crowdsourced nature~\cite{elashmawy2016osm}~\cite{howGoodIsVolunteeredGeoInf}.
 
 For comparison, a standard highway lane is approximately 3.5 meters wide. Consequently, a typical 1--2 meter mapping error may cover a substantial portion of a lane geometry, which becomes unacceptable in applications requiring lane-level decisions. As can be seen in Figure~\ref{fig:positional_accuracy}, the positional accuracy of publicly available maps is not suited for autonomous driving.
 
 \begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.32\textwidth}
-        \includegraphics[width=\textwidth]{images/positional_accuracy/markings_on_google_roads}
-        \caption{Google Roads}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \includegraphics[width=\textwidth]{images/positional_accuracy/markings_on_google_sat}
-        \caption{Google Satellite}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \includegraphics[width=\textwidth]{images/positional_accuracy/markings_on_bing_sat}
-        \caption{Bing Satellite}
-    \end{subfigure}
-    \caption{Ground truth lane marking points overlaid on publicly available maps.}
-    \label{fig:positional_accuracy}
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{images/positional_accuracy/markings_on_google_roads}
+    \caption{Google Roads}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{images/positional_accuracy/markings_on_google_sat}
+    \caption{Google Satellite}
+  \end{subfigure}\hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \includegraphics[width=\textwidth]{images/positional_accuracy/markings_on_bing_sat}
+    \caption{Bing Satellite}
+  \end{subfigure}
+  \caption{Ground truth lane marking points overlaid on publicly available maps.}
+  \label{fig:positional_accuracy}
 \end{figure}
 
-In contrast, autonomous vehicles and advanced driver-assistance systems (ADAS) require significantly higher map accuracy. High Definition (HD) maps aim to provide centimeter-level geometric and semantic information to support vehicle localization and planning. As illustrated in Figure~\ref{fig:positional_accuracy}, standard mapping products lack the geometric precision required for autonomous navigation.
+In contrast, autonomous vehicles and Advanced Driver-Assistance Systems (ADAS) require significantly higher map accuracy. High Definition (HD) maps aim to provide centimeter-level geometric and semantic information to support vehicle localization and planning. As illustrated in Figure~\ref{fig:positional_accuracy}, standard mapping products lack the geometric precision required for autonomous navigation.
 
-
-HD maps enable a vehicle to rely not only on real-time sensor observations but also on a pre-built, high-precision spatial representation of the environment. This is particularly important in scenarios where sensor perception is limited, such as occlusions caused by large vehicles or adverse weather conditions.
+HD maps enable a vehicle to rely not only on real-time sensor observations but also on a pre-built, high-precision spatial representation of the environment. This is particularly important in scenarios where sensor perception is limited, such as occlusions caused by large vehicles or adverse weather conditions. Furthermore, relying exclusively on real-time sensor processing is computationally expensive and can introduce latency, potentially creating a bottleneck in navigation systems. By integrating HD maps, the system shifts from a purely reactive, sensor-driven perception approach to a more proactive navigation framework, allowing the vehicle to utilize prior high-fidelity data to augment its understanding of the environment and streamline its decision-making process.
 
 A representative industrial implementation of HD mapping is the Orbis Map system developed by TomTom, a location technology company providing mapping and mobility services for automotive manufacturers and mobility providers. The Orbis Map is a multi-layered high-precision mapping infrastructure composed of heterogeneous data sources with varying cost and accuracy characteristics.
 
@@ -71,10 +62,10 @@ During validation, cross-sections are defined orthogonally to the road direction
 The same cross-sections are intersected with lane boundary geometries extracted from the HD map. Comparing these intersections with ground truth allows computation of APA and RPA metrics. Figure~\ref{fig:lbem_cross_section} shows an example of this annotation process.
 
 \begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.7\textwidth]{images/lbem_cross_section}
-    \caption{An LBEM image overlaid with a cross-section (green) and the manually annotated lane boundary intersection points: solid (red) and dashed (yellow).}
-    \label{fig:lbem_cross_section}
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/lbem_cross_section}
+  \caption{An LBEM image overlaid with a cross-section (green) and the manually annotated lane boundary intersection points: solid (red) and dashed (yellow).}
+  \label{fig:lbem_cross_section}
 \end{figure}
 
 However, constructing ground truth datasets introduces several challenges. First, LBEM representations are derived from rasterized LiDAR point clouds, which inherently introduce discretization errors and geometric information loss. Second, manual annotation is labor-intensive and expensive. Prior research has shown that even relatively simple interface modifications can significantly improve annotation efficiency. For example, the Extreme Clicking approach achieved up to a fivefold speedup compared to traditional bounding box annotation methods~\cite{papadopoulos2017extreme}.
@@ -93,8 +84,8 @@ The proposed pipeline is a geometry- and statistics-based processing framework t
 The contribution of this thesis can be formulated around the following research questions:
 
 \begin{enumerate}
-    \item \textbf{Trajectory reconstruction from stitched point clouds:} How can vehicle trajectories be reconstructed from already stitched LiDAR point cloud sequences, and how does this impact downstream geometric inference? (This includes the development of one baseline and three improved algorithms for trajectory reconstruction.)
-    \item \textbf{Lane boundary extraction from LiDAR:} How accurately can lane boundaries be extracted from high-density LiDAR point clouds using intensity-based and geometric features?
-    \item \textbf{Robust preprocessing of LiDAR data:} What preprocessing and filtering steps are required to reliably separate road surfaces and lane markings from noise and non-road objects in LiDAR point clouds?
-    \item \textbf{Validity of automatically generated ground truth:} To what extent can automatically extracted lane boundary geometries be used as ground truth for positional accuracy evaluation of HD maps?
+  \item \textbf{Trajectory reconstruction from stitched point clouds:} How can vehicle trajectories be reconstructed from already stitched LiDAR point cloud sequences, and how does this impact downstream geometric inference? (This includes the development of one baseline and three improved algorithms for trajectory reconstruction.)
+  \item \textbf{Lane boundary extraction from LiDAR:} How accurately can lane boundaries be extracted from high-density LiDAR point clouds using intensity-based and geometric features?
+  \item \textbf{Robust preprocessing of LiDAR data:} What preprocessing and filtering steps are required to reliably separate road surfaces and lane markings from noise and non-road objects in LiDAR point clouds?
+  \item \textbf{Validity of automatically generated ground truth:} To what extent can automatically extracted lane boundary geometries be used as ground truth for positional accuracy evaluation of HD maps?
 \end{enumerate}
