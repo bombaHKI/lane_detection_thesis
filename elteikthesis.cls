@@ -126,7 +126,7 @@
 		\newcommand{\authorlabel}{Author}
 		\newcommand{\suplabel}{Supervisor}
 		\newcommand{\intsuplabel}{Internal supervisor}
-		\newcommand{\extsuplabel}{External supervisor}
+		\newcommand{\extsuplabel}{Industrial supervisor}
 
 		\newcommand{\deflabel}{Definition}
 		\newcommand{\theolabel}{Theorem}
@@ -487,29 +487,24 @@
 				& {\sc \large \makecell{\deptname}}
 			\end{tabular}
 
-			\vspace{2.5cm}
+			\vspace{2cm}
 			{\bf \LARGE \thesistitle \par}
-			\vspace{4.0cm}
+			\vspace{2.5cm}
 
 			\ifdefined\extsupaff
-				{\it \large \authorlabel:}\\
-				{\large \authorname}\\
-				\degreename\\
-				\vspace{2.0cm}
+				\begin{flushleft}
+					{\it \large \authorlabel:}\\[0.2cm]
+					{\large \authorname}\\
+					\degreename\\[1.2cm]
 
-				\begin{tabular}{ l c l }
-					{\it \large \intsuplabel:} &
-					\hspace{4.0cm} &
-					{\it \large \extsuplabel:}\\
+					{\it \large \intsuplabel:}\\[0.2cm]
+					{\large \supname}\\
+					\supaff\\[1.2cm]
 
-					{\large \supname} &
-					\hspace{4.0cm} &
+					{\it \large \extsuplabel:}\\[0.2cm]
 					{\large \extsupname}\\
-
-					\supaff &
-					\hspace{4.0cm} &
-					\extsupaff\\
-				\end{tabular}
+					\extsupaff
+				\end{flushleft}
 			\else
 				\vspace{1.0cm}
 				\begin{flushleft}

@@ -1,81 +1,100 @@
 \chapter{Introduction}
 \label{ch:intro}
 
-\section{Motiváció}
+\section{Motivation}
 \label{sec:motivation}
 
-A térképek eredetileg emberi navigációs célokra készültek. A korai térképek jellemzően kézi rajzolással készültek, ahol a geometriai pontosság erősen függött a méretaránytól és a rajzolási konvencióktól. Egy ilyen reprezentációban akár egy ceruzavonal vastagságnyi eltérés is több tíz vagy akár száz kilométeres valós bizonytalanságot jelenthetett.
+Maps were originally developed to support human navigation. Early cartographic representations were typically created through manual drawing, where geometric accuracy strongly depended on scale and drawing conventions. In such representations, even a deviation equivalent to the thickness of a pencil line could correspond to an uncertainty of tens of kilometers in the real world.
 
-A térképkészítés digitalizációja jelentős előrelépést hozott, mivel lehetővé tette a folyamatos skálázhatóságot és a geometriai pontosság növelését. A modern digitális térképek (pl.\ GPS-alapú rendszerek) már műholdas és szenzoros mérésekre támaszkodnak, azonban ezek a rendszerek továbbra is hordoznak mérési bizonytalanságokat, illetve nem minden térképi pont esetében áll rendelkezésre közvetlen mérés, ami lokális geometriai torzulásokhoz vezethet.
+The digitalization of cartography represented a major step forward, enabling continuous scalability and improved geometric precision. Modern digital maps increasingly rely on satellite imagery and sensor-based measurements. However, these systems still contain measurement uncertainties, and not every map feature is directly observed. As a result, local geometric distortions may still occur.
 
-Ezek a térképek elsősorban általános felhasználási esetekre készülnek, például:
+These maps are primarily designed for general-purpose applications, including:
+
 \begin{itemize}
-    \item emberi navigáció,
-    \item helyek keresése és POI-alapú szolgáltatások,
-    \item útvonaltervezés és közlekedési információk,
-    \item turisztikai és location-based szolgáltatások,
-    \item előzetes tervezési feladatok,
-    \item alacsony--közepes pontosságot igénylő mérnöki alkalmazások.
+    \item human navigation,
+    \item location search and point-of-interest (POI)-based services,
+    \item route planning and traffic information systems,
+    \item tourism and location-based services,
+    \item engineering applications requiring low to medium positional accuracy.
 \end{itemize}
 
-Ezen alkalmazások többsége nem igényel méteresnél finomabb pontosságot. Például az OpenStreetMap adatok pozicionális pontosságát több tanulmány is körülbelül 1--2 méteres nagyságrendbe sorolja, azonban ez erősen regionálisan változó, mivel crowdsourced adatbázisról van szó~\cite{osmaccuracy}.
+Most of these use cases do not require sub-meter accuracy. For instance, the positional accuracy of OpenStreetMap data is typically on the order of 1–2 meters, although this varies significantly across regions due to its crowdsourced nature~\cite{elashmawy2016osm}~\cite{howGoodIsVolunteeredGeoInf}.
 
-Összehasonlításképpen egy autópálya sáv szélessége jellemzően ${\sim}3{,}5$ méter, így egy átlagos 1--2 méteres térképi hiba a sáv geometriájának akár jelentős részét is lefedheti, ami már nem elfogadható olyan alkalmazásoknál, ahol sávszintű döntések szükségesek.
+For comparison, a standard highway lane is approximately 3.5 meters wide. Consequently, a typical 1--2 meter mapping error may cover a substantial portion of a lane geometry, which becomes unacceptable in applications requiring lane-level decisions. As can be seen in Figure~\ref{fig:positional_accuracy}, the positional accuracy of publicly available maps is not suited for autonomous driving.
 
-Ezzel szemben az autonóm járművek és fejlett vezetéstámogató rendszerek (ADAS) már nagyságrendekkel pontosabb térképi reprezentációt igényelnek. A HD (High Definition) térképek célja, hogy centiméteres pontosságú geometriai és szemantikus információkat biztosítsanak a jármű lokalizációjához és tervezéséhez.\todo{citation needed}
-
-A HD térképek lehetővé teszik, hogy a jármű ne kizárólag a valós idejű szenzoradatokra támaszkodjon, hanem egy előre felépített, nagy pontosságú térképi reprezentációt is használjon a lokalizáció és tervezés támogatására. Ez különösen fontos olyan helyzetekben, ahol a szenzoros észlelés korlátozott, például takart látómező esetén (pl.\ nagy járművek mögötti rejtett objektumok), vagy rossz időjárási körülmények között.\todo{ide érdemes egy konkrét AV perception / occlusion paper}
-
-A HD térképek egyik ipari példája a TomTom által fejlesztett Orbis Map rendszer, amely több rétegből álló nagy pontosságú térképi infrastruktúrát biztosít. A TomTom egy holland location technology vállalat, amely HD térképeket és kapcsolódó szolgáltatásokat nyújt autógyártók és mobilitási cégek számára.\todo{TomTom / Orbis Map citation needed}
-
-Az Orbis Map felépítéséhez különböző adatokat használnak, melyek adatszerzési költségükben és pontosságukban is eltérnek. Például SDO (Sensor Derived Observations) és egyéb szenzoros és térképi adatokat, amelyek lehetnek saját gyűjtésűek vagy külső partnerektől származók. A térkép egyik kulcsrétege a HD Basemap, amelynek célja a sávgeometriák és úthálózati elemek centiméteres pontosságú reprezentációja, jellemzően ${\sim}10$--20 cm-es geometriai hibahatárral.
-
-A vállalat HD Basemap rétegének előállítása többféle adatforrás és feldolgozási lépés kombinációjával történik. A legnagyobb pontosságú adatokat a MoMa (Mobile Mapping) rendszer biztosítja, amely LiDAR szenzorokkal, panorámakamerákkal, GNSS-szel és inerciális mérőegységekkel felszerelt mérőjárműveket használ. A LiDAR pontfelhőkből előállított LRI (Linear Referencing Images) és LBEM (LiDAR Bird's Eye Mosaic) reprezentációk lehetővé teszik az útfelfestések és sávszegélyek nagy pontosságú detektálását. Az LBEM egy felülnézeti, raszterizált 2D reprezentáció, amely a MoMa LiDAR pontfelhőinek talajsíkra történő vetítésével készül. Az előállítás során a MoMa jármű LiDAR méréseket, trajektória- és kalibrációs adatokat gyűjt, majd az egyes pixelek egy adott méretű (tipikusan 5 cm felbontású) térbeli cellába eső lézerpontok statisztikai jellemzőit reprezentálják.
-
-\begin{table}[h]
+\begin{figure}[htbp]
     \centering
-    \footnotesize
-    \caption{A MoMa és SDO adatforrások összehasonlítása.}
-    \label{tab:moma_sdo}
-    \begin{tabular}{|p{2.5cm}|p{5.5cm}|p{5.5cm}|}
-        \hline
-        & \textbf{MoMa (Mobile Mapping)} & \textbf{SDO} \\
-        \hline
-        \textbf{Vehicles} &
-        TomTom's own survey vans with high-end sensor rigs ($360^\circ$ Ladybug cameras, LiDAR/Velodyne, precision GNSS/IMU) &
-        Consumer/fleet vehicles with simpler sensors (typically front-facing ADAS camera, e.g.\ MobileEye) \\
-        \hline
-        \textbf{A ``session''} &
-        One continuous recording run by a MoMa van, producing panoramic imagery, LiDAR point clouds, and precise trajectories &
-        One drive's worth of sensor-derived feature observations (signs, lanes, road borders) --- not raw imagery \\
-        \hline
-        \textbf{Quality} &
-        Survey-grade accuracy with PPK post-processing; serves as \textbf{ground truth} &
-        Lower individual accuracy (elevation drift, miscategorized signs, no heading on some features) --- but improved through aggregation across many passes \\
-        \hline
-        \textbf{Scale} &
-        Limited to where TomTom schedules collection drives &
-        Massive --- hundreds of millions of observations daily across many countries from production vehicle fleets \\
-        \hline
-        \textbf{Primary use} &
-        High-quality map production, ground-truth validation, traffic light/sign observation creation (Rajali) &
-        Broad coverage map updates, change detection, speed limit updates, lane data at scale \\
-        \hline
-    \end{tabular}
-\end{table}
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{images/positional_accuracy/markings_on_google_roads}
+        \caption{Google Roads}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{images/positional_accuracy/markings_on_google_sat}
+        \caption{Google Satellite}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \includegraphics[width=\textwidth]{images/positional_accuracy/markings_on_bing_sat}
+        \caption{Bing Satellite}
+    \end{subfigure}
+    \caption{Ground truth lane marking points overlaid on publicly available maps.}
+    \label{fig:positional_accuracy}
+\end{figure}
 
-A MoMa rendszer ugyan centiméteres pontosságot biztosít, azonban globális skálán rendkívül költséges lenne kizárólag ilyen precíziós mérésekre támaszkodni. Emiatt a HD Basemap jelentős része SDO és egyéb, alacsonyabb költségű, nem precíziós mérési források felhasználásával készül. Az SDO kameraközpontú megközelítést alkalmaz, amely stereo kamerák, vizuális odometria és mélytanuló modellek segítségével nyer ki útelemeket a képi adatokból. Ez a megoldás lényegesen jobban skálázható, így lehetővé teszi a térképi lefedettség kiterjesztését nagy úthálózatokra és globális szintre.
+In contrast, autonomous vehicles and advanced driver-assistance systems (ADAS) require significantly higher map accuracy. High Definition (HD) maps aim to provide centimeter-level geometric and semantic information to support vehicle localization and planning. As illustrated in Figure~\ref{fig:positional_accuracy}, standard mapping products lack the geometric precision required for autonomous navigation.
 
-A HD Basemap előállítása egy többlépcsős, coarse-to-fine pipeline mentén történik. Első lépésként a különböző forrásokból származó adatokat közös koordinátarendszerbe illesztik, amelyhez LiDAR-alapú source-to-source alignment és SLAM technikákat alkalmaznak. Ezt követi a perception réteg, ahol mélytanuló modellek detektálják a sávhatárokat, útfelfestéseket és egyéb közlekedési elemeket a LiDAR és kameraképek alapján. Az így kinyert geometriai elemeket egy fusion komponens egyesíti, amely bipartite matching algoritmusokkal és megbízhatósági súlyokkal kombinálja a különböző forrásokból származó megfigyeléseket.
 
-A végső HD lane modell előállításához a rendszer az SD (Standard Definition) térképi topológiát használja kiindulási alapként, amelyet a pontosabb szenzoros megfigyelésekkel finomít. Az automatizált folyamatot a HAPT (Human Assisted Production Tooling) támogatja, ahol operátorok manuálisan ellenőrzik és javítják a bizonytalan eseteket. Az eredmény egy nagy pontosságú HD Basemap réteg, amely tartalmazza a sávgeometriákat, útfelfestéseket és egyéb lane-level közlekedési információkat.
+HD maps enable a vehicle to rely not only on real-time sensor observations but also on a pre-built, high-precision spatial representation of the environment. This is particularly important in scenarios where sensor perception is limited, such as occlusions caused by large vehicles or adverse weather conditions.
 
-Az így előállított HD térképek minőségét többféle metrika segítségével ellenőrzik annak érdekében, hogy megfeleljenek az elvárt pontossági követelményeknek. A legfontosabb mérőszámok közé tartozik az \textit{Absolute Positional Accuracy} (APA) és a \textit{Relative Positional Accuracy} (RPA), amelyek a sávhatároló geometriák pontosságát vizsgálják egy manuálisan előállított ground truth adatbázis segítségével.
+A representative industrial implementation of HD mapping is the Orbis Map system developed by TomTom, a location technology company providing mapping and mobility services for automotive manufacturers and mobility providers. The Orbis Map is a multi-layered high-precision mapping infrastructure composed of heterogeneous data sources with varying cost and accuracy characteristics.
 
-A validáció során előre meghatározott helyeken az út irányára merőleges szakaszokat, úgynevezett \textit{cross-section}öket definiálnak. Ezeket a cross-section vonalakat az annotátorok geo-hivatkozott LBEM képekre vetítik rá, majd megjelölik azokat a pontokat, ahol a vonal metszi a sávhatárokat. A jelölések nemcsak fizikai útburkolati jelekhez tartozhatnak, hanem virtuális sávhatárokhoz is --- például szaggatott vonalak vagy részben hiányzó felfestések esetén. Így minden cross-sectionhöz egy ground truth pontkészlet tartozik.
+One of its key components is the HD Basemap, which targets centimeter-level representation of lane geometry and road network elements, typically with a geometric error in the range of approximately 10--20 cm.
 
-A HD Basemap validációja során ugyanezen cross-sectionök és a térképen tárolt sávhatároló geometriák metszéspontjait is meghatározzák. A ground truth és a térképi metszéspontok összehasonlításából számíthatók az APA és RPA metrikák. Az APA a sávhatárolók abszolút eltérését méri a valós világhoz képest, míg az RPA a sávszélességek pontosságát vizsgálja, vagyis azt, hogy a szomszédos sávhatárolók közötti távolság mennyire egyezik a valósággal.
+\section{Data Sources and Mapping Pipeline}
+\label{sec:datasources}
+Within TomTom’s internal HD mapping pipeline, the HD Basemap is constructed from multiple data sources that differ significantly in both acquisition cost and geometric accuracy. The two most important data sources used in this process are Mobile Mapping (MoMa) data and Sensor Derived Observations (SDO).
 
-A ground truth adatbázis előállítása azonban több problémát is felvet. Egyrészt az LBEM reprezentáció LiDAR pontfelhőből származó raszteresített képként jön létre, amely esetén a pontfelhő pixelesítése információvesztéssel és geometriai pontatlanságokkal járhat. Másrészt a manuális annotáció jelentős emberi erőforrást igényel, ezért idő- és költségigényes folyamat. A szakirodalomban kimutatták, hogy még egyszerű annotációs interfész-módosítások is jelentős hatékonyságnövekedést eredményezhetnek: például az \textit{Extreme Clicking} megközelítésben előre generált javaslatok nélkül is akár ötszörös gyorsulást értek el a hagyományos bounding box annotációhoz képest~\cite{papadopoulos2017extreme}.
+MoMa data is collected in-house by TomTom using dedicated mapping vehicles equipped with high-precision sensors, including LiDAR scanners, panoramic cameras, and inertial measurement units. These vehicles capture highly accurate spatial measurements that enable centimeter-level reconstruction of road geometry. From the acquired LiDAR point clouds, representations such as Linear Referencing Images (LRI) and LiDAR Bird’s Eye Mosaic (LBEM) are generated, supporting precise detection of lane boundaries and road markings.
 
-A dolgozatban bemutatott megközelítés erre a problémára kíván megoldást adni egy előre összefűzött LiDAR pontfelhőket feldolgozó pipeline segítségével. A cél a sávhatárolók közvetlen, vektoros reprezentációjának előállítása, amely lehetővé teszi a cross-sectionök és a sávhatároló geometriák metszéspontjainak automatikus meghatározását. Ennek eredményeként a ground truth pontok automatikusan generálhatók lennének, így az annotátorok feladata a javasolt pontok ellenőrzésére és szükség szerinti javítására korlátozódna. Ez jelentősen csökkentheti a manuális annotáció költségét és növelheti a validációs folyamat skálázhatóságát.
+In contrast, Sensor Derived Observations (SDO) are obtained from external sources, primarily from production vehicles equipped with ADAS systems. These observations are significantly less precise than MoMa measurements at the individual sample level, as they rely mainly on camera-based sensing, visual odometry, and onboard perception systems. However, SDO data is available in extremely large quantities and at substantially lower acquisition cost. Through large-scale aggregation, reliable road geometry and traffic-related features can still be inferred despite the lower precision of individual observations.
+
+Due to its scalability and broad geographic coverage, SDO serves as the primary data source for large-scale HD map construction within TomTom. Most of the HD Basemap is generated from aggregated SDO observations and other low-cost sensing modalities, enabling efficient expansion of map coverage across global road networks. In contrast, MoMa data is considerably more expensive to acquire and therefore cannot be collected at the same scale.
+
+Nevertheless, MoMa remains a critical component of the overall mapping pipeline because of its superior geometric accuracy. In particular, validation and quality assessment processes rely exclusively on MoMa-derived data. Its centimeter-level precision makes it suitable as a reference source for evaluating the positional correctness of HD map geometries.
+
+\section{Quality Assessment and Validation}
+\label{sec:quality}
+
+The quality of HD maps is evaluated using several metrics to ensure compliance with stringent accuracy requirements. The most important measures include \textit{Absolute Positional Accuracy} (APA) and \textit{Relative Positional Accuracy} (RPA). APA quantifies the absolute deviation of lane boundary geometry from ground truth, while RPA evaluates the correctness of lane width and relative spatial relationships between adjacent lane boundaries.
+
+During validation, cross-sections are defined orthogonally to the road direction at selected locations. Annotators project these cross-sections onto geo-referenced LBEM images and mark intersection points between the lines and lane boundaries. These annotations may correspond to both physical markings and inferred (virtual) lane boundaries, such as dashed or partially missing markings. Each cross-section therefore yields a set of ground truth points.
+
+The same cross-sections are intersected with lane boundary geometries extracted from the HD map. Comparing these intersections with ground truth allows computation of APA and RPA metrics. Figure~\ref{fig:lbem_cross_section} shows an example of this annotation process.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/lbem_cross_section}
+    \caption{An LBEM image overlaid with a cross-section (green) and the manually annotated lane boundary intersection points: solid (red) and dashed (yellow).}
+    \label{fig:lbem_cross_section}
+\end{figure}
+
+However, constructing ground truth datasets introduces several challenges. First, LBEM representations are derived from rasterized LiDAR point clouds, which inherently introduce discretization errors and geometric information loss. Second, manual annotation is labor-intensive and expensive. Prior research has shown that even relatively simple interface modifications can significantly improve annotation efficiency. For example, the Extreme Clicking approach achieved up to a fivefold speedup compared to traditional bounding box annotation methods~\cite{papadopoulos2017extreme}.
+
+A particularly important focus area for HD map quality is highway environments, as autonomous driving systems are most likely to operate at high speeds in these scenarios, where precision requirements are most demanding.
+
+\section{Proposed Approach and Contribution}
+\label{sec:contribution}
+
+The core idea of this project is to improve the scalability and accuracy of cross-section-based ground truth generation. While current annotation workflows rely on LBEM images to label intersections between cross-sections and lane boundaries, the proposed pipeline directly operates on the underlying LiDAR point clouds from which LBEM is derived. This avoids the additional positional inaccuracies introduced by rasterization.
+
+The company stores LiDAR point clouds from MoMa sessions in a stitched and georeferenced form, partitioned into H3 spatial cells (a hierarchical hexagonal geospatial indexing system developed by Uber for efficient spatial data partitioning ~\cite{uberh3}). However, these aggregated point clouds no longer contain vehicle trajectory information, making trajectory reconstruction a key step in the proposed pipeline.
+
+The proposed pipeline is a geometry- and statistics-based processing framework that reconstructs accurate lane boundary geometries from highway LiDAR point clouds in a vectorized, machine-interpretable format. Each lane boundary is further classified with a semantic attribute (solid or dashed). This significantly accelerates ground truth computation for cross-section-based evaluation and improves scalability of the overall validation process.
+
+The contribution of this thesis can be formulated around the following research questions:
+
+\begin{enumerate}
+    \item \textbf{Trajectory reconstruction from stitched point clouds:} How can vehicle trajectories be reconstructed from already stitched LiDAR point cloud sequences, and how does this impact downstream geometric inference? (This includes the development of one baseline and three improved algorithms for trajectory reconstruction.)
+    \item \textbf{Lane boundary extraction from LiDAR:} How accurately can lane boundaries be extracted from high-density LiDAR point clouds using intensity-based and geometric features?
+    \item \textbf{Robust preprocessing of LiDAR data:} What preprocessing and filtering steps are required to reliably separate road surfaces and lane markings from noise and non-road objects in LiDAR point clouds?
+    \item \textbf{Validity of automatically generated ground truth:} To what extent can automatically extracted lane boundary geometries be used as ground truth for positional accuracy evaluation of HD maps?
+\end{enumerate}
