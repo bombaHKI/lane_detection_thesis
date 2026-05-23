@@ -8,11 +8,11 @@ Maps were originally developed to support human navigation. Early cartographic r
 
 The digitalization of cartography represented a major step forward, enabling continuous scalability and improved geometric precision. Modern digital maps increasingly rely on satellite imagery and sensor-based measurements. However, these systems still contain measurement uncertainties, and not every map feature is directly observed. As a result, local geometric distortions may still occur.
 
-These maps are primarily designed for general-purpose applications, such as human navigation; location search and Point-of-Interest (POI)-based services; route planning and traffic information systems; tourism; and engineering applications requiring low to medium positional accuracy.
+These maps are primarily designed for general-purpose applications, such as human navigation; location search and Point-of-Interest (POI)-based services; route planning and traffic information systems; tourism; and engineering applications requiring low to medium positional accuracy~\cite{HDMapsSurvey}.
 
 Most of these use cases do not require sub-meter accuracy. For instance, the positional accuracy of OpenStreetMap data is typically on the order of 1–2 meters, although this varies significantly across regions due to its crowdsourced nature~\cite{elashmawy2016osm}~\cite{howGoodIsVolunteeredGeoInf}.
 
-For comparison, a standard highway lane is approximately 3.5 meters wide. Consequently, a typical 1--2 meter mapping error may cover a substantial portion of a lane geometry, which becomes unacceptable in applications requiring lane-level decisions. As can be seen in Figure~\ref{fig:positional_accuracy}, the positional accuracy of publicly available maps is not suited for autonomous driving.
+For comparison, a standard highway lane is approximately 3.5 meters wide. Consequently, a typical 1--2 meter mapping error may cover a substantial portion of a lane geometry, which becomes unacceptable in applications requiring lane-level decisions.
 
 \begin{figure}[htbp]
   \centering
@@ -38,11 +38,11 @@ HD maps enable a vehicle to rely not only on real-time sensor observations but a
 
 A representative industrial implementation of HD mapping is the Orbis Map system developed by TomTom, a location technology company providing mapping and mobility services for automotive manufacturers and mobility providers. The Orbis Map is a multi-layered high-precision mapping infrastructure composed of heterogeneous data sources with varying cost and accuracy characteristics.
 
-One of its key components is the HD Basemap, which targets centimeter-level representation of lane geometry and road network elements, typically with a geometric error in the range of approximately 10--20 cm.
+One of its key components is the HD Basemap, which targets centimeter-level representation of lane geometry and road network elements, typically with a geometric error in the range of approximately 10--20 cm ~\cite{tomtom2017hdmap}.
 
 \section{Data Sources and Mapping Pipeline}
 \label{sec:datasources}
-Within TomTom’s internal HD mapping pipeline, the HD Basemap is constructed from multiple data sources that differ significantly in both acquisition cost and geometric accuracy. The two most important data sources used in this process are Mobile Mapping (MoMa) data and Sensor Derived Observations (SDO).
+Within TomTom's internal HD mapping pipeline, the HD Basemap is constructed from multiple data sources that differ significantly in both acquisition cost and geometric accuracy. The two most important data sources used in this process are Mobile Mapping (MoMa) data and Sensor Derived Observations (SDO).
 
 MoMa data is collected in-house by TomTom using dedicated mapping vehicles equipped with high-precision sensors, including LiDAR scanners, panoramic cameras, and inertial measurement units. These vehicles capture highly accurate spatial measurements that enable centimeter-level reconstruction of road geometry. From the acquired LiDAR point clouds, representations such as Linear Referencing Images (LRI) and LiDAR Bird’s Eye Mosaic (LBEM) are generated, supporting precise detection of lane boundaries and road markings.
 
@@ -90,10 +90,16 @@ The contribution of this thesis can be formulated around the following research 
   \item \textbf{Validity of automatically generated ground truth:} To what extent can automatically extracted lane boundary geometries be used as ground truth for positional accuracy evaluation of HD maps?
 \end{enumerate}
 
-Chapter~\ref{ch:lit} reviews the relevant literature concerning state-of-the-art HD map generation and lane extraction techniques.
+To address these research questions, this thesis proposes a geometry-based offline processing pipeline for extracting structured lane representations from large-scale mobile LiDAR point clouds. The workflow combines trajectory reconstruction, geometric filtering, road surface segmentation, intensity-based lane marking extraction, and vectorized curve fitting into a unified HD mapping framework.
 
-Chapter~\ref{ch:impl} introduces the proposed pipeline, detailing the algorithms for car trajectory retrieval and the processing steps required to extract structured lane geometry.
+The remainder of this thesis is organized as follows:
 
-Chapter~\ref{ch:eval} presents the experimental evaluation of the pipeline, assessing the performance of both the trajectory reconstruction and the lane extraction output against manually labeled ground truth data, containing approximately 5 km of road coverage and a comprehensive set of lane divider samples.
+\begin{itemize}
+    \item Chapter~\ref{ch:lit} reviews the relevant literature concerning state-of-the-art HD map generation and lane extraction techniques.
 
-Chapter~\ref{ch:future} discusses the limitations of the current methodology and suggests directions for future research.
+    \item Chapter~\ref{ch:impl} introduces the proposed pipeline, detailing the algorithms for trajectory reconstruction and the processing steps required to extract structured lane geometry.
+
+    \item Chapter~\ref{ch:eval} presents the experimental evaluation of the pipeline, assessing the performance of both trajectory reconstruction and lane extraction against manually labeled ground truth data covering approximately 5 km of roadway and a comprehensive set of lane divider samples.
+
+    \item Chapter~\ref{ch:future} discusses the limitations of the proposed methodology and outlines directions for future work.
+\end{itemize}

@@ -1,0 +1,92 @@
+\chapter{Related Works}
+\label{ch:lit}
+
+High-definition (HD) map generation has evolved into a broad research domain driven by the rapid development of autonomous driving, mobile mapping, robotics, and geographic information systems (GIS), all of which require highly detailed and accurate spatial representations. Since HD mapping combines sensing, perception, geometric processing, and semantic vectorization, the field cannot be categorized along a single dimension. Instead, the literature is commonly organized according to several overlapping perspectives, including the level of automation, methodological paradigm, temporal processing strategy, sensing modality, point cloud representation, and vectorization methodology. These categories are often interconnected; for example, a system may simultaneously be automated, LiDAR-based, offline, and geometry-driven. The following sections summarize the major taxonomic groups and review representative state-of-the-art approaches within each category.
+
+It is also important to note that many related works focus primarily on semantic segmentation rather than precise geometric reconstruction. Some approaches perform semantic segmentation of LiDAR point clouds without producing vectorized map representations~\cite{ExtractionClassificationRoadMarkings}. Other methods vectorize road markings along their boundaries but do not reconstruct complete lane geometries~\cite{isprs-archives-XLII-2-W13-1089-2019}. In contrast,~\cite{Eisemann_2024} proposes an industrial-scale HD mapping framework relying heavily on OpenStreetMap (OSM) priors; however, the global positional accuracy of OSM data is generally insufficient for survey-grade highway mapping applications.
+
+\section{Manual and Automated HD Mapping}
+\label{sec:manual_automated}
+
+One of the most fundamental distinctions in HD mapping concerns the degree of human involvement in the mapping workflow. Traditional HD map production pipelines are largely manual or semi-manual~\cite{rong2020lgsvlsimulatorhighfidelity}. These systems rely on dedicated survey vehicles equipped with high-precision LiDAR, GNSS, IMU, and camera systems, followed by extensive human annotation of lanes, road markings, and infrastructure elements. While such workflows provide extremely high accuracy and consistency, they are expensive, time-consuming, and difficult to scale to continental road networks or rapidly changing environments.
+
+Consequently, recent research has increasingly shifted toward automated HD map generation. Automated systems extract road geometry and semantic information directly from sensor observations using algorithmic or machine learning-based approaches, thereby minimizing human intervention. This transition is primarily motivated by the scalability requirements of autonomous driving, where maps must be updated frequently and cost-effectively. Crowdsourced mapping frameworks further reduce acquisition costs by utilizing sensors mounted on everyday vehicles instead of dedicated survey fleets.
+
+Current automated HD mapping systems demonstrate substantial progress in lane extraction, road boundary estimation, and vector map generation. However, fully automated approaches still face challenges related to robustness, occlusion handling, inconsistent road markings, and generalization across diverse environments~\cite{OcclusionHandlingSDMapFusion}. As a result, many industrial solutions continue to incorporate manual verification stages even when the extraction itself is largely automated.
+
+\section{Geometric and Deep Learning-Based Approaches}
+\label{sec:geometric_dl}
+
+Another major categorization distinguishes between classical geometric methods and modern deep learning-based approaches. Geometric methods rely on explicit mathematical modeling and spatial reasoning. Typical techniques include RANSAC-based plane fitting, spline approximation, Hough transforms, clustering, and multi-view reconstruction~\cite{isprs-archives-XLII-2-W13-1089-2019}. These methods are interpretable and often independent of training data, making them attractive in applications where reproducibility and physical consistency are essential.
+
+In contrast, deep learning approaches formulate HD mapping as a perception problem. Neural networks learn to infer lanes, intersections, and road topology directly from sensor observations. Recent transformer-based architectures, including MapTR, have demonstrated end-to-end semantic HD map generation capabilities~\cite{mapTR}. Recent deep learning frameworks employ increasingly sophisticated architectures for vectorized HD mapping, including multi-granularity attention mechanisms and generative diffusion models for robust road geometry reconstruction and uncertainty estimation~\cite{yang2024mgmapnetmultigranularityrepresentationlearning, monninger2025mapdiffusiongenerativediffusionvectorized}.
+These methods are typically trained on large-scale annotated datasets and can model highly complex urban road networks.
+
+Despite their success, learning-based methods remain strongly dependent on training data quality, annotation consistency, and sensor configurations. They may also generalize poorly when applied to environments significantly different from the training domain. Geometric methods, while generally less adaptive and often requiring manual parameter tuning, provide greater transparency and deterministic behavior. An additional advantage is that they do not require massive annotated datasets or computationally expensive training procedures. This consideration is particularly important in the present work, where the lack of large-scale labeled data directly motivates the use of a geometry-driven pipeline.
+
+\section{Online and Offline Mapping Pipelines}
+\label{sec:online_offline}
+
+HD mapping systems can also be categorized according to whether map generation is performed online or offline. Offline approaches process sensor data after acquisition, allowing computationally intensive optimization and globally consistent reconstruction. Such workflows commonly employ Simultaneous Localization and Mapping (SLAM), loop-closure optimization, batch point cloud registration, and high-resolution vector fitting~\cite{eightpopularLidarandVisualSLAM}. Offline systems prioritize geometric accuracy and completeness over latency.
+
+Online HD mapping, in contrast, aims to generate local maps in real time directly onboard the vehicle. This paradigm has become increasingly important for autonomous driving systems that must react dynamically to temporary road changes, construction zones, and evolving traffic conditions. Online systems typically operate on local regions surrounding the vehicle and employ lightweight sensor fusion and incremental update strategies to satisfy strict runtime constraints. Pretrained models continuously infer local HD maps relative to the vehicle during operation~\cite{li2022hdmapnetonlinehdmap}.
+
+Current state-of-the-art online approaches primarily rely on deep neural networks and bird’s-eye-view (BEV) representations to enable rapid inference from sequential sensor data. However, limited computational resources and the absence of long-range optimization often reduce global consistency and geometric precision. Therefore, in applications requiring survey-grade accuracy and highway-scale consistent vector maps, offline approaches remain dominant.
+
+\section{Categorization by Sensor Modality}
+\label{sec:sensor_modality}
+
+HD mapping methods may additionally be categorized according to their primary sensing modality. Camera-based approaches use RGB imagery to infer lane boundaries, road markings, and semantic context. These methods benefit from rich texture information and relatively inexpensive hardware. However, purely image-based systems suffer from perspective distortion, limited depth estimation accuracy, and sensitivity to illumination and weather conditions~\cite{li2022bevformerlearningbirdseyeviewrepresentation}.
+
+Large-scale road network segmentation from aerial imagery has also been explored using OpenStreetMap-based supervision~\cite{ParsingAerialImagesAroundtheWorld}. However, the work focuses on semantic road extraction rather than HD map generation.
+
+LiDAR-based approaches instead rely on dense 3D point clouds and reflectance measurements. LiDAR provides highly accurate geometric information and naturally supports metric bird’s-eye-view processing. Furthermore, LiDAR intensity values can reveal lane markings and painted road patterns even under poor lighting conditions. Consequently, LiDAR has become one of the dominant sensing modalities in HD mapping research~\cite{gong2024lidarbasedhdmaplocalization}.
+
+Fusion-based approaches combine LiDAR and camera data to exploit the strengths of both modalities. Camera images provide semantic richness and visual context, while LiDAR contributes precise geometry and depth information. Recent multimodal fusion architectures demonstrate improved robustness and extended perception range. Nevertheless, fusion systems require careful calibration and synchronization, and their performance may degrade significantly when one sensing modality becomes unreliable or unavailable~\cite{HDMapFusion}.
+
+Current research trends increasingly emphasize multimodal fusion, particularly in urban autonomous driving scenarios.
+
+\section{Point Cloud Representation Strategies}
+\label{sec:point_cloud_repr}
+
+In LiDAR-based mapping systems, another important distinction concerns how the point cloud itself is represented and processed. One major category converts 3D LiDAR data into image-like representations. Bird’s-eye-view (BEV) projections discretize points into top-down occupancy or intensity grids, enabling the application of conventional convolutional neural networks. Similarly, range-image representations project LiDAR points into spherical coordinates aligned with the sensor scanning pattern. These representations simplify learning but introduce discretization artifacts~\cite{wu2017squeezesegconvolutionalneuralnets}.
+
+An alternative strategy processes raw point clouds directly. Point-based neural architectures operate directly on unordered point sets without projection, thereby preserving geometric fidelity~\cite{qi2017pointnetdeeplearningpoint, thomas2019kpconvflexibledeformableconvolution, hu2020randlanetefficientsemanticsegmentation}. These methods preserve full geometric fidelity and avoid information loss caused by rasterization. However, they are computationally expensive and difficult to scale to very large scenes~\cite{qi2017pointnetdeeplearningpoint, thomas2019kpconvflexibledeformableconvolution, hu2020randlanetefficientsemanticsegmentation}.
+
+Voxel-based and point-pillar-based methods attempt to balance efficiency and geometric expressiveness. Voxel-based and point-pillar-based methods attempt to balance computational efficiency and geometric expressiveness through structured spatial discretization~\cite{graham20173dsemanticsegmentationsubmanifold, lang2019pointpillarsfastencodersobject}. These approaches achieve favorable runtime characteristics and have become widely adopted in autonomous driving perception systems.
+
+Recent research trends increasingly favor hybrid representations that combine efficient spatial discretization with adaptive local feature extraction. Nevertheless, purely geometric offline processing pipelines often continue to operate directly on raw point clouds in order to preserve accuracy and avoid discretization artifacts during vectorization~\cite{liu2019pointvoxelcnnefficient3d}.
+
+It should be noted that many of the above references originate from the broader fields of LiDAR perception and geometric processing rather than HD map generation specifically. However, these methods constitute the foundational building blocks of modern LiDAR-based HD mapping systems, where segmentation and detection techniques are extended into globally or locally consistent spatial representations.
+
+\section{Geometric and Spatial-Statistical Vectorization Approaches}
+\label{sec:geometric_vectorization}
+
+In the present work, the input consists of a pre-georeferenced mobile LiDAR point cloud. Since no large-scale annotated dataset is available for supervised learning, the proposed solution follows an offline, geometry-driven LiDAR processing pipeline.
+
+These approaches focus on directly extracting structured road representations from geometric and reflectance information without relying on machine learning.
+
+A common strategy is trajectory-driven region-of-interest clipping. Here, the reconstructed vehicle trajectory defines the processing corridor, allowing algorithms to focus exclusively on points near the roadway while filtering out irrelevant environmental structures. This significantly reduces computational complexity and improves robustness. Consequently, trajectory reconstruction becomes an important component of the proposed pipeline, although this step is omitted in existing HD mapping workflows where accurate trajectories are assumed to be already available.
+
+Ground segmentation represents another fundamental stage. Classical approaches commonly employ RANSAC-based plane fitting, rasterization followed by region growing, or local surface estimation techniques to separate the road surface from surrounding infrastructure and vegetation~\cite{Ground_image-basedsegmentation, Segmentationof3Dlidardatainnonflaturbanenvironments}. One approach first removes a large portion of non-ground points by analyzing distances and inclination angles between consecutive LiDAR rings, followed by RANSAC-based extraction of the remaining ground surface~\cite{interringground}. Nevertheless, handling curved roads, abrupt elevation changes, and environments containing multiple local planes remains an active research challenge.
+
+After ground extraction, road markings are typically identified using intensity-based segmentation. These methods exploit the higher reflectivity of painted lane markings compared to asphalt surfaces. A simple but commonly used heuristic considers points belonging to the upper intensity percentiles as candidate road markings. More adaptive histogram-based thresholding techniques include Otsu and Kapur maximum-entropy thresholding methods~\cite{otsu1979threshold, GUAN201493, isprs-archives-XLII-2-W13-1089-2019}.
+
+Although such heuristic methods perform well in controlled environments such as highways with relatively uniform road paint quality, they often produce large numbers of false positives under low-intensity contrast conditions, for example on concrete road surfaces~\cite{IntensityThresholdingandDeepLearningBasedLaneMarkingExtraction}. Modern online HD mapping systems increasingly employ deep learning-based semantic segmentation approaches instead. Architectures based on PointNet++, transformers, and related models utilize not only intensity but also geometric and spatial context, enabling more robust detection of degraded lane markings in complex urban environments.
+
+In the proposed pipeline, this stage is implemented using either Kapur thresholding or percentile-based thresholding as configurable alternatives.
+
+The final vectorization stage generally involves curve fitting and topological reconstruction. Polynomial curves, B-spline interpolation, clothoid (Euler spiral) approximations, and Moving Least Squares (MLS) smoothing are commonly applied to generate continuous lane geometries compatible with HD mapping standards. Clothoid models are particularly popular in autonomous driving HD maps because they provide linearly varying curvature, closely matching real-world road design principles and vehicle dynamics models~\cite{RoadNetworkGenerationTechniquesReview}. Beyond geometric accuracy, vectorization must also ensure topological consistency, including lane connectivity, splits, and merges. The primary objective of such approaches is to produce geometrically continuous and physically realistic lane models while maintaining compact and efficient map representations for autonomous navigation systems.
+
+Although deep learning-based approaches currently dominate many benchmark evaluations, geometric vectorization methods remain highly relevant in survey-grade offline mapping due to their interpretability, deterministic behavior, and compatibility with engineering road models. Furthermore, geometric pipelines do not require large annotated training datasets or computationally expensive model training procedures.
+
+\section{Benchmark Datasets and Coordinate Systems}
+\label{sec:datasets}
+
+Research in HD mapping is also strongly influenced by the characteristics of available benchmark datasets. Widely used datasets such as nuScenes, Waymo Open Dataset, Argoverse, ApolloScape, and KITTI-360 typically employ egocentric or city-specific coordinate systems~\cite{nuscenes, mei2022waymoopendatasetpanoramic, argoverse, apolloscape, kitti-360}. These datasets were primarily designed for autonomous driving perception tasks and therefore emphasize local consistency rather than globally accurate georeferencing.
+
+While these datasets are extremely valuable for learning-based perception research, they are less suitable for large-scale georeferenced mapping workflows. Absolute coordinate consistency is often limited, and integration with GIS systems or infrastructure databases may require additional alignment procedures.
+
+Globally georeferenced LiDAR datasets suitable for highway-scale HD mapping remain relatively rare. Existing datasets with GPS/IMU integration frequently lack dense lane-level annotations or long continuous highway segments. As a result, significant gaps remain in publicly available large-scale georeferenced highway LiDAR resources.
+
+Although many modern autonomous driving datasets contain highly accurate localization data and HD map elements, they are generally not optimized for survey-grade, globally consistent georeferenced mapping workflows. Most public autonomous driving benchmarks prioritize comparability of perception models rather than the generation of long-range, globally consistent geospatial representations.
