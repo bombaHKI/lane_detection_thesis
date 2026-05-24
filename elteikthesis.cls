@@ -214,6 +214,8 @@
 \RequirePackage[export]{adjustbox}
 % Subfigures
 \RequirePackage{subcaption}
+% Prevent floats from crossing section boundaries
+\RequirePackage[section]{placeins}
 % Rotating figures
 \RequirePackage{rotating}
 
