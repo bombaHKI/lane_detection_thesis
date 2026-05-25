@@ -540,7 +540,142 @@ This stage retained $894{,}671$ points, representing less than $1\%$ of the orig
 \section{Line Fitting}
 \label{sec:line_fitting}
 
-% TODO: This section will detail the following stages:
-% - Line extension RANSAC
-% - Moving least squares refinement
-% - Line labeling (solid vs. dashed)
+The result of the previous processing stages is a clean and highly usable point cloud representing the road markings. Similar intermediate representations are commonly used in road-marking extraction and classification pipelines, where the extracted point clouds are typically rasterized and further processed using methods such as connected component analysis, statistical outlier removal, or template-based classification of markings including arrows and other symbols~\cite{isprs-archives-XLII-2-W13-1089-2019}. In the present work, however, such semantic road-marking classifications are not required, and raster-based approaches are less suitable for the objective of continuous lane geometry tracking. Therefore, a different strategy was developed that focuses specifically on extracting and tracking lane geometries directly from the point cloud representation.
+
+The proposed line extraction pipeline consists of three major stages: sliding-window RANSAC fitting (Section~\ref{sec:sliding_ransac}), moving least squares smoothing (Section~\ref{sec:mls_smoothing}), and line cropping and labeling (Section~\ref{sec:line_labeling}).
+
+\FloatBarrier
+\subsection{Sliding-Window RANSAC}
+\label{sec:sliding_ransac}
+
+The extracted point cloud is processed using a sliding-window approach in which lane geometries are incrementally extended across consecutive windows. This design allows previously fitted line segments to influence the processing of subsequent windows. Such temporal and spatial continuity is particularly advantageous in highway environments, where lane geometries change smoothly and rarely exhibit sudden curvature variations. Consequently, if the lane curvature is known for a given distance, it is highly probable that the following section will exhibit a similar geometry.
+
+Before fitting, the points within each window are rotated to align with the local driving direction, enabling lane segments to be conveniently represented as quadratic functions of the form $y = ax^2 + bx + c$.
+
+\FloatBarrier
+\subsubsection{Initial Algorithm (V0)}
+\label{sec:ransac_v0}
+
+The initial algorithm assumes that a set of lane segments already exists in the current context and attempts to extend each segment into the current window. The procedure maintains two categories of lines: \emph{relevant lines} (those successfully continued in the previous window and thus candidates for continuation) and \emph{new lines} (initialized from remaining unassigned points).
+
+For each relevant line, two seed points are selected: the endpoint of the line and another point sampled slightly before the endpoint. Using these two seed points and one randomly selected point from the current window's point pool, a constrained quadratic RANSAC algorithm estimates a continuation candidate. The RANSAC fitting is restricted by a maximum curvature parameter to prevent unrealistic lane geometries. For each candidate, the number of inlier points is evaluated.
+
+The complete procedure operates as follows:
+
+\paragraph{Step~1: Continue relevant lines.}
+\begin{enumerate}
+  \item For each relevant line, sample two seed points (the endpoint $E_{i-1}$ and a preceding point $P_{i-1}$).
+  \item Generate constrained quadratic RANSAC continuation candidates using a randomly sampled third point from the pool.
+  \item Accept a candidate only if its curvature remains below a predefined threshold.
+  \item Record the number of supporting inliers. If fewer than $n_{\min}$ inliers support the continuation, trim the line back to its last supporting inlier and remove it from the relevant set.
+  \item Among all valid continuation candidates, select the one with the highest inlier count.
+  \item Sample the fitted quadratic and append the generated points to the corresponding line.
+  \item Remove all points within a margin $d_{\text{margin}}$ of the newly added segment from the pool.
+  \item Repeat from the beginning until all relevant lines have been either extended or removed.
+\end{enumerate}
+
+\paragraph{Step~2: Initialize new lines.}
+\begin{enumerate}
+  \item Apply constrained quadratic RANSAC to the remaining pool.
+  \item Each accepted fit with at least $n_{\min}$ inliers initializes a new line.
+  \item Remove nearby points from the pool.
+  \item Repeat until too few points remain for reliable fitting.
+\end{enumerate}
+
+\paragraph{Limitation.} Although this algorithm performs well overall, it exhibits oscillatory behavior in certain cases. Figure~\ref{fig:v0_defect} illustrates the failure. Consider a scenario where lines $l_1$, $l_2$, and $l_3$ already exist when processing window~$i$. While $l_1$ and $l_3$ extend correctly, extending $l_2$ (a dashed lane boundary) becomes problematic: the seed points $E_{i-1}$ and $P_{i-1}$ are not perfectly aligned with the actual dashed geometry, causing the fitted quadratic to introduce a slight curvature error. During the next extension step, the new estimates $E_i$ and $P_i$ further amplify this error, eventually causing the fitted lane to drift away from the true marking. The result is an oscillating trajectory around the actual lane boundary.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/line_fit/v0_defect}
+  \caption{Oscillation defect of the initial algorithm (V0): a small curvature estimation error in the seed points is amplified across successive windows, causing the line extension to diverge from the actual lane geometry.}
+  \label{fig:v0_defect}
+\end{figure}
+
+\FloatBarrier
+\subsubsection{Inlier Refitting (V1)}
+\label{sec:ransac_v1}
+
+To reduce the oscillation observed in V0, the continuation strategy was modified. Instead of directly accepting the winning RANSAC hypothesis, the algorithm refits a quadratic function using \emph{all inliers} associated with the winning candidate. This modification significantly stabilizes the fitted geometry, as the refitted curve leverages the full support of the inlier set rather than relying solely on the three sample points.
+
+Figure~\ref{fig:v1_defect} demonstrates the improvement. The refitted curves (red) are substantially smoother than the original algorithm. However, some dashed lane segments are still occasionally missed. This occurs because the winning RANSAC hypothesis may not pass through points near the far end of the current bin; consequently, the refitted curve relies primarily on points near the bin's beginning. The subsequent window may still lack sufficient support at the boundary region, leading to slight curvature deviations.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/line_fit/v1_defect}
+  \caption{V1 improvement: extended lane geometries after inlier refitting (red) compared to the original RANSAC hypotheses (orange).}
+  \label{fig:v1_defect}
+\end{figure}
+
+\FloatBarrier
+\subsubsection{Confirmed-Inlier Seed Selection (V2)}
+\label{sec:ransac_v2}
+
+The final improvement modifies the seed-point selection strategy. Instead of using the line endpoint and a nearby preceding point, the algorithm selects:
+\begin{itemize}
+  \item the last \emph{confirmed inlier} on the line (i.e., a point verified to lie on the actual lane marking),
+  \item and another point on the line slightly preceding it.
+\end{itemize}
+
+\noindent Because the selected seed points are guaranteed to lie on the true lane geometry rather than on a previously fitted curve, the resulting continuation estimates become considerably more stable. This modification almost completely eliminates the previously observed oscillations while introducing only negligible local discontinuities.
+
+Figure~\ref{fig:v2_results} show the final results. The algorithm accurately follows the lane geometry while effectively suppressing the oscillatory behavior observed in V0 and~V1.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/line_fit/v2_result}
+  \caption{Final results of the V2 sliding-window RANSAC algorithm: the extracted lane geometries accurately follow both solid and dashed lane markings with minimal oscillatory artifacts.}
+  \label{fig:v2_results}
+\end{figure}
+
+\FloatBarrier
+\subsection{Moving Least Squares Smoothing}
+\label{sec:mls_smoothing}
+
+To further reduce residual geometric artifacts introduced during the incremental fitting process, a smoothing stage is applied after line extraction. For each extracted line, the following procedure is performed:
+\begin{enumerate}
+  \item Collect all points located within a distance $\delta$ from the line.
+  \item Uniformly sample additional points along the line at fixed spatial intervals.
+  \item Apply a Moving Least Squares (MLS) smoothing algorithm to the combined point set.
+\end{enumerate}
+
+\noindent The MLS-based smoothing removes small local irregularities while improving the overall fit to the underlying inlier points. The additional uniformly sampled points are essential because large gaps between dashed lane segments would otherwise distort the local fitting behavior---without them, the MLS surface would interpolate across gaps rather than maintaining the lane's geometric continuity.
+
+Figure~\ref{fig:smoothing_result} presents the smoothing results, demonstrating highly consistent and visually smooth lane geometries.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/line_fit/smoothing_result}
+  \caption{Result of the Moving Least Squares smoothing: residual geometric artifacts from the incremental fitting are effectively removed.}
+  \label{fig:smoothing_result}
+\end{figure}
+
+\FloatBarrier
+\subsection{Line Cropping and Labeling}
+\label{sec:line_labeling}
+
+The preceding stages determine the geometric positions of lane boundaries. However, the final output also requires semantic classification of each extracted line into one of two categories: \emph{solid} or \emph{dashed}. The labeling procedure operates as follows:
+
+\begin{enumerate}
+  \item For each line, collect all nearby points within a distance $\delta$ and project them onto the line.
+  \item This projection reduces the problem to a one-dimensional representation along the lane direction.
+  \item Apply one-dimensional DBSCAN clustering to the projected point positions to identify continuous supported segments~\cite{DBSCAN}.
+  \item Discard segments shorter than a minimum length threshold (noise removal).
+  \item Large gaps between supported segments split the line into separate subsegments.
+\end{enumerate}
+
+\noindent The resulting subsegments are classified according to their length:
+\begin{itemize}
+  \item Segments exceeding a predefined length threshold are labeled as \textbf{solid}.
+  \item Remaining segments (short, periodically spaced) are labeled as \textbf{dashed}.
+\end{itemize}
+
+\noindent Figure~\ref{fig:labeling_result} shows the final labeling results.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/line_fit/labeling_result}
+  \caption{Final lane marking classification: points (pink), solid lane geometries (red), dashed lane geometries (dashed light green) and exact dashed markings (dark green). The one-dimensional clustering successfully distinguishes continuous from intermittent markings.}
+  \label{fig:labeling_result}
+\end{figure}
+
+Additionally, although the primary objective of the proposed method is continuous lane geometry extraction, the algorithm can also be used to estimate the precise geometry of lane divider markings. By considering the extracted lane segments, independently, the fitted curves provide an accurate representation of the physical divider geometry, as illustrated in Figure~\ref{fig:labeling_result}.
