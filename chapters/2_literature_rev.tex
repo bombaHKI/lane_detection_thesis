@@ -53,7 +53,7 @@ In LiDAR-based mapping systems, another important distinction concerns how the p
 
 An alternative strategy processes raw point clouds directly. Point-based neural architectures operate directly on unordered point sets without projection, thereby preserving geometric fidelity~\cite{qi2017pointnetdeeplearningpoint, thomas2019kpconvflexibledeformableconvolution, hu2020randlanetefficientsemanticsegmentation}. These methods preserve full geometric fidelity and avoid information loss caused by rasterization. However, they are computationally expensive and difficult to scale to very large scenes~\cite{qi2017pointnetdeeplearningpoint, thomas2019kpconvflexibledeformableconvolution, hu2020randlanetefficientsemanticsegmentation}.
 
-Voxel-based and point-pillar-based methods attempt to balance efficiency and geometric expressiveness. Voxel-based and point-pillar-based methods attempt to balance computational efficiency and geometric expressiveness through structured spatial discretization~\cite{graham20173dsemanticsegmentationsubmanifold, lang2019pointpillarsfastencodersobject}. These approaches achieve favorable runtime characteristics and have become widely adopted in autonomous driving perception systems.
+Voxel-based and point-pillar-based methods attempt to balance computational efficiency and geometric expressiveness through structured spatial discretization~\cite{graham20173dsemanticsegmentationsubmanifold, lang2019pointpillarsfastencodersobject}. These approaches achieve favorable runtime characteristics and have become widely adopted in autonomous driving perception systems.
 
 Recent research trends increasingly favor hybrid representations that combine efficient spatial discretization with adaptive local feature extraction. Nevertheless, purely geometric offline processing pipelines often continue to operate directly on raw point clouds in order to preserve accuracy and avoid discretization artifacts during vectorization~\cite{liu2019pointvoxelcnnefficient3d}.
 
@@ -62,9 +62,7 @@ It should be noted that many of the above references originate from the broader 
 \section{Geometric and Spatial-Statistical Vectorization Approaches}
 \label{sec:geometric_vectorization}
 
-In the present work, the input consists of a pre-georeferenced mobile LiDAR point cloud. Since no large-scale annotated dataset is available for supervised learning, the proposed solution follows an offline, geometry-driven LiDAR processing pipeline.
-
-These approaches focus on directly extracting structured road representations from geometric and reflectance information without relying on machine learning.
+In the present work, the input consists of a pre-georeferenced mobile LiDAR point cloud. Since no large-scale annotated dataset is available for supervised learning, the proposed solution follows an offline, geometry-driven LiDAR processing pipeline. These approaches focus on directly extracting structured road representations from geometric and reflectance information without relying on machine learning.
 
 A common strategy is trajectory-driven region-of-interest clipping. Here, the reconstructed vehicle trajectory defines the processing corridor, allowing algorithms to focus exclusively on points near the roadway while filtering out irrelevant environmental structures. This significantly reduces computational complexity and improves robustness. Consequently, trajectory reconstruction becomes an important component of the proposed pipeline, although this step is omitted in existing HD mapping workflows where accurate trajectories are assumed to be already available.
 

@@ -99,7 +99,7 @@ The pipeline consists of multiple interdependent processing stages organized int
     \item Segment road markings using intensity thresholding (Kapur maximum-entropy method~\cite{KAPUR1985273} or percentile-based thresholding).
   \end{enumerate}
 
-  \item \textbf{Line fitting on road markings} (Section~\ref{sec:line_fitting}):
+\item \textbf{Line fitting on road markings} (Section~\ref{sec:line_fitting}):
   \begin{enumerate}
     \item Cluster and track lane marking points across overlapping windows.
     \item Fit and refine vectorized lane curves using constrained quadratic RANSAC and moving least squares.
@@ -317,12 +317,223 @@ Four trajectory reconstruction algorithms were presented, each providing adequat
 \section{Point Cloud Processing}
 \label{sec:pointcloud_processing}
 
-% TODO: This section will detail the following processing stages:
-% - Binning along the vehicle trace
-% - Distance-based clipping
-% - RANSAC-based ground segmentation
-% - Region-growing road surface detection
-% - Intensity thresholding for road marking segmentation
+This section describes the sequence of processing stages applied to the raw point cloud to isolate road marking points. The stages are applied in order: spatial binning (Section~\ref{sec:binning}), distance-based clipping (Section~\ref{sec:distance_clip}), ground segmentation (Section~\ref{sec:ground_seg}), intensity thresholding (Section~\ref{sec:intensity_thresh}), and road surface extraction (Section~\ref{sec:road_surface}).
+
+\FloatBarrier
+\subsection{Spatial Binning Along the Vehicle Trace}
+\label{sec:binning}
+
+The first processing step partitions the point cloud into spatial bins along the reconstructed vehicle trajectory. Adjacent bins are subsequently grouped into overlapping windows, which serve as the processing units for all downstream stages.
+
+A bin retains only those points that satisfy two conditions: (1)~the point lies within the spatial extent of the bin, and (2)~the point's GPS timestamp is temporally close to the time at which the vehicle traversed that bin. The temporal constraint is necessary because the dataset contains points recorded during the return pass (i.e., when the vehicle traveled in the opposite direction on the other side of the highway). Without temporal filtering, these points would introduce noise, particularly in the presence of SLAM drift.
+
+The binning strategy is essential for the intensity thresholding and line fitting stages, as it enables spatially adaptive processing. Figure~\ref{fig:bins_windows} illustrates the partitioning scheme.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/point_process/bins_windows}
+  \caption{Spatial binning of the point cloud along the vehicle trace. Consecutive bins are grouped into overlapping windows for processing.}
+  \label{fig:bins_windows}
+\end{figure}
+
+\FloatBarrier
+\subsection{Distance-Based Clipping}
+\label{sec:distance_clip}
+
+Points located beyond a specified lateral distance from the vehicle trace are discarded. While this step is not strictly required for algorithmic correctness, it substantially reduces computational cost: the point count decreases from $104{,}028{,}999$ to $81{,}139{,}327$ (a $22\%$ reduction). Since each point may be processed multiple times due to the overlapping window structure, this reduction yields a significant speedup in subsequent stages.
+
+Figure~\ref{fig:distance_clip} illustrates the clipping result. A small number of points on the road surface are also removed; these correspond to measurements recorded when the vehicle had already left the bin's temporal window and are treated as noise consistent with the binning logic described above.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/point_process/distance_clip}
+  \caption{Distance-based clipping: discarded points (red) and retained points colored by intensity (grayscale).}
+  \label{fig:distance_clip}
+\end{figure}
+
+\FloatBarrier
+\subsection{Ground Segmentation}
+\label{sec:ground_seg}
+
+Since lane markings exist exclusively on the road surface, non-ground points (e.g., vehicles, vegetation, barriers) must be removed. Only the intensity patterns of ground-level points are relevant for lane geometry extraction.
+
+\subsubsection{Baseline Approach}
+
+The initial ground segmentation algorithm partitions the point cloud into an $l \times l$ grid of square cells and fits a plane to each cell using RANSAC. Points that do not lie within the inlier tolerance of the estimated plane are classified as non-ground and discarded.
+
+This approach performs adequately in most cases. However, a systematic failure mode was identified: in cells where a non-ground structure (e.g., a guardrail) contains more points than the actual road surface, RANSAC fits the plane to the structure rather than the ground. Consequently, genuine road surface points are incorrectly rejected (see Figure~\ref{fig:ground_basic}).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/point_process/ground_basic}
+  \caption{Failure case of the baseline ground segmentation: when a guardrail dominates the cell, RANSAC fits to the structure rather than the road. Rejected points are shown in yellow (colored by elevation).}
+  \label{fig:ground_basic}
+\end{figure}
+
+\subsubsection{Improved Ground Segmentation}
+
+To address the above limitation, the following refinement was implemented:
+\begin{enumerate}
+  \item Within each grid cell, discard points above the $p$-th percentile of the $z$-coordinate (elevation), removing elevated structures.
+  \item Apply RANSAC plane fitting to the remaining points.
+  \item If the estimated plane's inclination exceeds a predefined gradient threshold, reject the current inlier set and recompute the plane estimate.
+\end{enumerate}
+
+\noindent This two-stage filtering ensures that elevated structures are removed prior to plane estimation, and overly steep plane fits (indicative of vertical surfaces) are rejected. Figure~\ref{fig:ground_improved} demonstrates the improved results.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{images/point_process/ground_grad_1}
+    \caption{Filtering of an overpass structure.}
+    \label{fig:ground_grad_1}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{images/point_process/ground_grad_2}
+    \caption{Correct handling of the guardrail case.}
+    \label{fig:ground_grad_2}
+  \end{subfigure}
+  \caption{The improved ground segmentation algorithm correctly classifies ground and non-ground points in both challenging scenarios.}
+  \label{fig:ground_improved}
+\end{figure}
+
+The ground segmentation stage retained $60{,}822{,}026$ points from the previous step.
+
+\FloatBarrier
+\subsection{Intensity Thresholding}
+\label{sec:intensity_thresh}
+
+Intensity thresholding is applied independently within each overlapping local window rather than globally across the entire point cloud. This localized approach is necessary because LiDAR intensity values are not globally consistent---they depend on sensor-to-surface distance, incidence angle, pavement material, surface wear, and environmental conditions~\cite{GUAN201493}. A single global threshold would produce excessive false positives in some regions while missing valid lane markings in others. Local thresholding enables the segmentation to adapt to spatial variations in intensity distributions.
+
+Despite the localized approach, a fundamental challenge persists: roadside vegetation (particularly grass) produces high-intensity reflections comparable to lane markings. Consequently, selecting an appropriate threshold involves a trade-off (see Figure~\ref{fig:intensity_threshold}):
+\begin{itemize}
+  \item A low threshold retains lane markings but also admits numerous false positives from vegetation and other reflective surfaces.
+  \item A high threshold suppresses false positives but causes genuine lane markings to become false negatives.
+\end{itemize}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{images/point_process/intensity_lo}
+    \caption{Low intensity threshold: many false positives.}
+    \label{fig:intensity_lo}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{images/point_process/intensity_hi}
+    \caption{High intensity threshold: lane markings lost.}
+    \label{fig:intensity_hi}
+  \end{subfigure}
+  \caption{The intensity threshold trade-off: a low threshold (a) retains excessive noise, while a high threshold (b) discards valid lane marking points.}
+  \label{fig:intensity_threshold}
+\end{figure}
+
+The window-based processing helps determine a locally optimal threshold value, though the result is not always ideal. This stage retained $3{,}317{,}369$ points.
+
+\FloatBarrier
+\subsection{Road Surface Extraction}
+\label{sec:road_surface}
+
+As evident from the intensity thresholding results (Figure~\ref{fig:intensity_threshold}), a substantial number of high-intensity points remain outside the actual road surface. Line fitting cannot be applied directly to this point set, as sufficiently dense outlier clusters would produce spurious detections.
+
+This stage employs a region-growing algorithm seeded from the vehicle trajectory to identify which portions of the thresholded point set lie on the actual road surface.
+
+\subsubsection{Region-Growing Algorithm}
+
+The algorithm operates within each processing window as follows:
+\begin{enumerate}
+  \item Compute the convex hull of all points within the window to establish spatial bounds.
+  \item Discretize the $xy$-plane into a regular grid of cells; cells containing at least one point are marked as \emph{non-empty}.
+  \item Determine \emph{seed cells}: those cells through which the vehicle trajectory passes.
+  \item Perform flood-fill from the seed cells: all empty cells reachable from the seeds without crossing a non-empty cell are classified as road surface cells.
+  \item Compute the convex hull of the road surface cells and apply a small buffer offset to ensure boundary marking points are included.
+  \item Retain only those points falling within the buffered road surface polygon.
+\end{enumerate}
+
+\noindent Figure~\ref{fig:road_surface_steps} illustrates the progression of this algorithm.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{images/point_process/road_surface/1_initial_hull}
+    \caption{Window convex hull (pink), high-intensity points (blue), vehicle trace (orange).}
+    \label{fig:rs_hull}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{images/point_process/road_surface/2_non_empty_cells}
+    \caption{Non-empty cells (light red), seed cells (green).}
+    \label{fig:rs_nonempty}
+  \end{subfigure}
+  \\[0.5em]
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{images/point_process/road_surface/3_flooded}
+    \caption{Flooded road surface cells (green).}
+    \label{fig:rs_flooded}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{images/point_process/road_surface/4_road_surface}
+    \caption{Buffered road surface (green), inlier points (light green), outlier points (red).}
+    \label{fig:rs_result}
+  \end{subfigure}
+  \caption{Stages of the region-growing road surface extraction algorithm.}
+  \label{fig:road_surface_steps}
+\end{figure}
+
+\subsubsection{Directional Cell Scaling}
+
+The basic region-growing algorithm occasionally ``leaks'' beyond the true road surface boundary when lane marking points are locally sparse or discontinuous, creating gaps that the flood-fill traverses (see Figure~\ref{fig:rs_defect}).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/point_process/road_surface/v1_defect}
+  \caption{Defect of the basic region-growing algorithm: gaps in lane marking intensity allow the flood-fill to escape beyond the road boundary.}
+  \label{fig:rs_defect}
+\end{figure}
+
+To address this, a coordinate transformation is applied prior to the region-growing step. Let $\theta$ denote the local direction of the vehicle trajectory. The point coordinates are first rotated by $-\theta$ to align the travel direction with a coordinate axis, then scaled by a factor $s < 1$ along the travel direction:
+\begin{equation}
+  \begin{bmatrix} x' \\ y' \end{bmatrix}
+  =
+  \begin{bmatrix} s & 0 \\ 0 & 1 \end{bmatrix}
+  \begin{bmatrix} \cos\theta & \sin\theta \\ -\sin\theta & \cos\theta \end{bmatrix}
+  \begin{bmatrix} x \\ y \end{bmatrix}.
+  \label{eq:directional_scaling}
+\end{equation}
+
+\noindent In the transformed coordinate space, the grid cells are effectively elongated along the travel direction. This elongation bridges small gaps in lane marking points, making the flood-fill boundary more robust against discontinuities. The region-growing algorithm is then applied in this transformed space. Figure~\ref{fig:rs_v2} illustrates the improved cell structure.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{images/point_process/road_surface/v2_1_non_empty}
+    \caption{Window boundary (pink), seed cells (green), non-empty cells (light red).}
+    \label{fig:rs_v2_nonempty}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \includegraphics[width=\textwidth]{images/point_process/road_surface/v2_flooded}
+    \caption{Flooded cells after directional scaling (light green).}
+    \label{fig:rs_v2_flooded}
+  \end{subfigure}
+  \caption{The improved region-growing algorithm with directional cell scaling produces more robust road surface boundaries.}
+  \label{fig:rs_v2}
+\end{figure}
+
+\subsubsection{Result}
+
+Figure~\ref{fig:road_surface_final} shows the final road surface extraction result applied to the point cloud. At this stage, the road marking points have been effectively isolated without requiring rasterization, thereby preserving the original point coordinates without spatial distortion.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/point_process/road_surface/road_surface_points}
+  \caption{Final result of the road surface extraction: retained road marking points (green) and discarded outliers (red).}
+  \label{fig:road_surface_final}
+\end{figure}
+
+This stage retained $894{,}671$ points, representing less than $1\%$ of the original ${\sim}104$ million input points. This dramatic reduction demonstrates the effectiveness of the multi-stage filtering pipeline in isolating the relevant lane marking points for subsequent geometric fitting.
 
 \FloatBarrier
 %------------------------------------------------------------------
