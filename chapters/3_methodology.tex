@@ -254,6 +254,67 @@ The algorithm is as follows:
   \label{fig:pulse_lines}
 \end{figure}
 
+\paragraph{Error Bound in the Idealized Case}\mbox{} \\
+
+Under idealized assumptions, an upper bound for the lateral reconstruction error of the Pulse Line Intersection algorithm can be derived analytically.
+
+Assume that:
+\begin{itemize}
+    \item the regression lines fitted to the packets perfectly recover the true beam-center lines passing through the LiDAR sensor position,
+    \item the two selected packet lines are perpendicular,
+    \item the vehicle travels with constant velocity $s$,
+    \item the LiDAR sensor rotates at $20\,\mathrm{Hz}$ (one full revolution every $0.05\,\mathrm{s}$).
+\end{itemize}
+
+Let $P_1$ and $P_2$ denote the true sensor positions at the acquisition times of the two packets. Since perpendicular packet orientations correspond to one quarter of a full revolution, the elapsed time between the two packets is
+
+\[
+\Delta t = \frac{0.05}{4}\,\mathrm{s}.
+\]
+
+Consequently, the distance traveled by the vehicle between the two packet acquisitions is
+
+\[
+\|P_1P_2\| = s \cdot \frac{0.05}{4}.
+\]
+
+Let $e_1$ and $e_2$ denote the regression lines fitted to the two packets. By assumption, $e_1$ passes through $P_1$, $e_2$ passes through $P_2$, and the two lines are perpendicular. Their intersection point therefore lies on the Thales circle defined by the segment $\overline{P_1P_2}$ (see Figure~\ref{fig:pulse_lines_proof}).
+
+The lateral reconstruction error corresponds to the perpendicular distance between the estimated intersection point and the true vehicle trajectory. This error is maximized when the two regression lines form angles of $\pm45^\circ$ relative to the driving direction. In this configuration, the maximum lateral error equals half of the distance between the two true sensor positions:
+
+\[
+\varepsilon_{\max} = \frac{\|P_1P_2\|}{2}.
+\]
+
+Substituting the previous expression for $\|P_1P_2\|$ yields
+
+\[
+\varepsilon_{\max}
+=
+\frac{s \cdot 0.05}{8}
+=
+\frac{s}{160}.
+\]
+
+For the maximum legal highway speed in Hungary ($130\,\mathrm{km/h} \approx 36.11\,\mathrm{m/s}$), the theoretical upper bound becomes
+
+\[
+\varepsilon_{\max}
+=
+\frac{36.11}{160}
+\approx
+0.23\,\mathrm{m}.
+\]
+
+In practice, the MoMa mapping vehicles typically travel significantly slower (approximately $90\,\mathrm{km/h}$), since the objective is accurate road surveying rather than rapid traversal. Therefore, the practical error bound is usually considerably lower.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/car_trace/pulse_lines_proof.png}
+  \caption{Idealized geometric model of the Pulse Line Intersection algorithm. The packet regression lines $e_1$ and $e_2$ pass through the true sensor positions $P_1$ and $P_2$, respectively, and their intersection lies on the Thales circle defined by $\overline{P_1P_2}$.}
+  \label{fig:pulse_lines_proof}
+\end{figure}
+
 This algorithm produced highly accurate position estimates among all four methods (quantitative evaluation in Chapter~\ref{ch:eval}) and is therefore used as the default trajectory reconstruction method in the pipeline.
 
 \FloatBarrier
