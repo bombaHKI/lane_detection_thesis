@@ -1,0 +1,46 @@
+\chapter{Limitations and Future Work}
+\label{ch:future}
+
+\section{Limitations}
+\label{sec:limitations}
+
+Although the proposed pipeline produced accurate lane boundary geometries on the evaluated highway datasets, several limitations remain.
+
+One important limitation is the reliance on manually defined parameters throughout multiple stages of the pipeline.
+While some parameters primarily influence computational efficiency, others significantly affect the geometric quality of the extracted lanes.
+
+For example, the distance-based clipping threshold mainly impacts runtime performance.
+As long as the clipping radius is sufficiently large to fully contain the roadway, the final geometric output remains largely unchanged.
+However, selecting unnecessarily large values substantially increases computational cost due to the increased number of processed points.
+
+In contrast, the intensity thresholding stage is highly sensitive to parameter selection.
+As demonstrated in Section~\ref{sec:eval_lanes}, the chosen threshold strongly influences the balance between false positives and false negatives.
+Low thresholds preserve lane markings but admit large amounts of noise from reflective vegetation and surrounding structures, while high thresholds suppress noise at the cost of removing genuine lane marking points.
+Although localized window-based thresholding improves robustness, the threshold selection still depends heavily on the characteristics of the environment, pavement material, and lane marking quality.
+
+Additional manually tuned parameters appear in the line fitting and labeling stages.
+These include the maximum distance between points and fitted lines, clustering thresholds, minimum segment lengths, and the rules used to distinguish solid and dashed lane boundaries.
+The optimal values for these parameters may vary across environments and sensor configurations, limiting the generalizability of the current implementation.
+
+Consequently, the proposed pipeline currently requires environment-specific parameter tuning and has primarily been validated on highway datasets with relatively regular geometries and clearly visible lane markings.
+Its robustness in highly heterogeneous urban environments remains an open question.
+
+\section{Future Work}
+\label{sec:future_work}
+
+Several promising directions exist for future work.
+
+One extension would involve extracting additional semantic road marking information beyond lane boundaries.
+The current pipeline focuses primarily on continuous lane geometries, but the same processing framework could potentially be extended to detect and reconstruct arrows, stop lines, text markings, and other road surface symbols.
+
+Another important direction is the use of the pipeline for generating high-quality training datasets for machine learning and deep learning approaches.
+Since the proposed method operates directly on raw LiDAR point clouds and produces geometrically accurate vectorized outputs, it could provide large-scale pseudo-ground-truth annotations for supervised learning systems.
+Such datasets could support the development of more robust multi-scene perception models capable of handling faded lane markings, intersections, occlusions, and context-dependent road geometries.
+
+Future research should also investigate hybrid approaches combining the deterministic geometric pipeline with learning-based semantic understanding.
+In complex urban environments, lane geometries are often only partially visible, requiring inference from contextual information such as surrounding traffic infrastructure, road topology, and neighbouring lane configurations.
+
+Finally, the proposed pipeline should be integrated into large-scale production workflows and evaluated on significantly larger and more diverse datasets.
+Running the system on substantially more recording sessions would allow verification of its robustness across varying environmental conditions, road types, pavement materials, and sensor characteristics.
+In addition, the generated lane geometries should be quantitatively compared against manually annotated ground truth using industrial in-house HD map quality metrics such as Absolute Positional Accuracy (APA) and Relative Positional Accuracy (RPA).
+Such large-scale validation would provide a more complete assessment of the practical applicability of the proposed methodology in production-grade HD mapping systems.

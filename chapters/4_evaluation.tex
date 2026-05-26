@@ -240,9 +240,9 @@ To assess the sensitivity of the lane extraction pipeline to key parameters, fou
 
 \begin{enumerate}
   \item \textbf{Baseline}: default parameter configuration.
-  \item \textbf{Bin\_40}: bin length increased from $25\,\mathrm{units}$ to $40\,\mathrm{units}$ (\texttt{context.bin\_length}).
+  \item \textbf{Bin\_40}: bin length increased from $25\,\mathrm{units}$ to $40\,\mathrm{units}$.
   \item \textbf{Intensity\_10}: intensity threshold percentile increased from $5\%$ to $10\%$.
-  \item \textbf{Intensity\_Kapur}: percentile-based intensity thresholding replaced with Kapur entropy thresholding~\cite{KAPUR1985273}.
+  \item \textbf{Intensity\_Kapur}: percentile-based intensity thresholding replaced with max-entropy entropy thresholding.
 \end{enumerate}
 
 \paragraph{Note on bin-length units.}\mbox{} \\
@@ -379,3 +379,63 @@ Increasing the intensity percentile threshold to $10\%$ (\textit{Intensity\_10})
 The weakest performance was observed in the increased bin-length configuration (\textit{Bin\_40}). Enlarging the temporal bin length from $25$ to $40$ Web Mercator pseudo-metres (approximately $17\,\mathrm{m}$ to $27\,\mathrm{m}$ on the ground) substantially reduced recall ($0.9670$) and introduced the most false positives and lane-count inconsistencies. The decrease in perfect cross-sections ($93.15\%$) and the increased lane-count MAE ($0.0707$) indicate degraded topological reconstruction quality. This suggests that larger binning regions reduce the pipeline's ability to adapt to local road geometry variations and lane-structure changes.
 
 Overall, the experiments demonstrate that the pipeline is highly sensitive to the binning configuration and moderately sensitive to intensity-threshold selection. Across all tested configurations, the baseline achieves sub-centimetre mean positional accuracy ($2.1\,\mathrm{cm}$) and near-perfect lane detection ($F_1 > 0.99$), confirming the effectiveness of the proposed lane extraction approach.
+
+\FloatBarrier
+\section{Performance and Resource Usage}
+\label{sec:eval_performance}
+
+All experiments were executed on an Apple MacBook Pro (Mac15,7) with an Apple M3 Pro SoC containing 12 CPU cores (6 performance and 6 efficiency cores) and $36,\mathrm{GB}$ of unified memory.
+
+\subsection{Stage-wise Runtime}
+Table~\ref{tab:stage_times} reports the average runtime (over 10 runs) for each pipeline stage when processing a typical highway segment.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Average runtime per pipeline stage (10 runs).}
+  \label{tab:stage_times}
+  \small
+  \begin{tabular}{@{}lr@{}}
+    \hline
+    \textbf{Stage} & \textbf{Time (s)} \\
+    \hline
+    Setup Stage & 2.45 \\
+    Car Trace Stage & 4.56 \\
+    Binning Stage (1st) & 15.29 \\
+    TraceDistanceFilterStage & 0.90 \\
+    GroundSegmentStage & 14.18 \\
+    IntensityThresholdStage & 11.22 \\
+    RoadSurfaceFilter & 4.85 \\
+    DownsampleStage & 3.32 \\
+    Binning Stage (2nd) & 0.07 \\
+    FitLinesStage & 10.47 \\
+    LineSmoothingStage & 16.41 \\
+    LineLabelingStage & 31.19 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+The total runtime for a full pipeline execution is approximately 115 seconds (just under 2 minutes) for a ~5 km highway segment, and more than 100 million points.
+
+\subsection{Point Cloud Size Reduction}
+The pipeline achieves substantial data reduction through progressive filtering and downsampling. Table~\ref{tab:point_reduction} shows the number of points remaining after each major stage for the sample tile 871e1d886ffffff.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Point count after each major processing stage (tile 871e1d886ffffff).}
+  \label{tab:point_reduction}
+  \small
+  \begin{tabular}{@{}lr@{}}
+    \hline
+    \textbf{Stage} & \textbf{Points Remaining} \\
+    \hline
+    Raw input & 104,028,999 \\
+    Distance clip & 81,139,327 \\
+    Ground segmentation & 60,822,026 \\
+    Intensity thresholding & 3,317,369 \\
+    Road surface extraction & 894,671 \\
+    Downsampling & 342,185 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+This reduction enables efficient downstream processing and storage, while preserving all relevant lane geometry information.

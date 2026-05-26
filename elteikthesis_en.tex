@@ -50,6 +50,17 @@
 % Topic declaration page (mandatory) - can also be attached instead
 %\includepdf{topicdeclaration.pdf}
 
+% Abstract
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+This thesis presents a geometry-based offline processing pipeline for extracting vectorized lane boundary geometries from high-density mobile LiDAR point clouds for High Definition (HD) mapping applications.
+The proposed framework addresses the challenge of generating accurate lane-level ground truth data for HD map validation without relying on rasterized representations or large-scale annotated training datasets.
+Since the provided LiDAR data lacked vehicle trajectory information, four trajectory reconstruction algorithms were developed and evaluated, including a novel Pulse Line Intersection method exploiting the LiDAR packet structure.
+The pipeline further combines spatial binning, ground segmentation, intensity-based lane marking extraction, road surface detection, and sliding-window curve fitting to reconstruct continuous lane geometries directly from raw point clouds.
+Experimental evaluation on approximately 10\,km of highway LiDAR data demonstrates that the proposed methods can reliably extract both solid and dashed lane boundaries while preserving centimetre-level geometric fidelity.
+The resulting vectorized lane representations enable scalable and precise cross-section-based HD map validation workflows.
+\cleardoublepage
+
 % Table of contents (mandatory)
 \tableofcontents
 \cleardoublepage
@@ -67,8 +78,8 @@
 \input{chapters/4_evaluation.tex}
 \cleardoublepage
 
-% \input{chapters/conclusion.tex}
-% \cleardoublepage
+\input{chapters/5_future_work.tex}
+\cleardoublepage
 
 % Acknowledgements (optional) - in case your thesis received funding or would like to express special thanks to someone
 \chapter*{\acklabel}

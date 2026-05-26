@@ -481,17 +481,30 @@
 
 		\begin{center}
 
-			\begin{tabular}{ c c }
-				\multirow{4}{*}{\hspace{-1.0cm}\includegraphics[width=0.25\textwidth]{\logofilename}}
+			% \begin{tabular}{ c c }
+			% 	\multirow{4}{*}{\hspace{-1.0cm}\includegraphics[width=0.2\textwidth]{\logofilename}}
 
-				& {\sc \Large \makecell{\univname}} \vspace{0.3cm}\\
-				& {\sc \Large \makecell{\facname}} \vspace{0.5cm}\\
-				& {\sc \large \makecell{\deptname}}
-			\end{tabular}
+			% 	& {\sc \makecell{} \vspace{-0.3cm}}\\
+			% 	& {\sc \Large \makecell{\univname}}\\
+			% 	& {\sc \Large \makecell{\facname}}
+			% \end{tabular}
 
-			\vspace{2cm}
+			\begin{minipage}{0.2\textwidth}
+			\hspace*{1.3cm}
+			\includegraphics[width=\linewidth]{\logofilename}
+			\end{minipage}
+			\hfill
+			\begin{minipage}{0.75\textwidth}
+				\hspace*{1cm}
+				\raggedright
+				\textsc{\Large \univname}\\
+				\hspace*{1cm}
+			\textsc{\Large \facname}
+			\end{minipage}
+
+			\vspace{3cm}
 			{\bf \LARGE \thesistitle \par}
-			\vspace{2.5cm}
+			\vspace{2cm}
 
 			\ifdefined\extsupaff
 				\begin{flushleft}
