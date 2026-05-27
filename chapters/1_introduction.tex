@@ -75,7 +75,7 @@ A particularly important focus area for HD map quality is highway environments, 
 \section{Proposed Approach and Contribution}
 \label{sec:contribution}
 
-The core idea of this project is to improve the scalability and accuracy of cross-section-based ground truth generation. While current annotation workflows rely on LBEM images to label intersections between cross-sections and lane boundaries, the proposed pipeline directly operates on the underlying LiDAR point clouds from which LBEM is derived. This avoids the additional positional inaccuracies introduced by rasterization.
+The primary objective of this thesis is to improve the scalability and accuracy of cross-section-based ground truth generation. While current annotation workflows rely on LBEM images to label intersections between cross-sections and lane boundaries, the proposed pipeline directly operates on the underlying LiDAR point clouds from which LBEM is derived. This avoids the additional positional inaccuracies introduced by rasterization.
 
 The company stores LiDAR point clouds from MoMa sessions in a stitched and georeferenced form, partitioned into H3 spatial cells (a hierarchical hexagonal geospatial indexing system developed by Uber for efficient spatial data partitioning ~\cite{uberh3}). However, these aggregated point clouds no longer contain vehicle trajectory information, making trajectory reconstruction a key step in the proposed pipeline.
 

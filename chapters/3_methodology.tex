@@ -160,7 +160,7 @@ As established in Section~\ref{sec:sensor}, the LiDAR sensor completes one full 
     \includegraphics[width=\textwidth]{images/car_trace/window_median_illutstration_real}
     \caption{Uneven number of reflections.}
   \end{subfigure}
-  \caption{Illustration of the Window Median algorithm, and it's defect: (a)~In the ideal situation both sides have the same amount of reflected points (b)~in typical scenarios, one side has more reflection.}
+  \caption{Illustration of the Window Median algorithm, and its defect: (a)~In the ideal situation both sides have the same amount of reflected points (b)~in typical scenarios, one side has more reflection.}
   \label{fig:window_median_illustration}
 \end{figure}
 
@@ -172,7 +172,7 @@ The algorithm proceeds as follows:
   \item Export the result to a GeoPackage file for subsequent evaluation.
 \end{enumerate}
 
-Despite its simplicity, this baseline method provides a surprisingly accurate approximation in the majority of cases. However, as shown in Figure~\ref{fig:window_median_result}, the estimate exhibits a systematic lateral bias: trees on the right side of the vehicle reflect more laser beams than the open left side, pulling the median toward the right.
+Despite its simplicity, this baseline method provides a reasonably accurate approximation in the majority of cases. However, as shown in Figure~\ref{fig:window_median_result}, the estimate exhibits a systematic lateral bias: trees on the right side of the vehicle reflect more laser beams than the open left side, pulling the median toward the right.
 
 \begin{figure}[htbp]
   \centering
@@ -348,7 +348,7 @@ The algorithm proceeds as follows:
   \label{fig:closest_point}
 \end{figure}
 
-The output confirms that the convergence observation holds in practice. After applying a moving-window average followed by Gaussian smoothing, the resulting trajectory provides a usable estimate for subsequent pipeline stages.
+Experimental results indicate that the convergence behavior holds in practice. After applying a moving-window average followed by Gaussian smoothing, the resulting trajectory provides a sufficiently accurate estimate for subsequent pipeline stages.
 
 \FloatBarrier
 \subsection{Summary of Trajectory Reconstruction}
@@ -490,7 +490,30 @@ Despite the localized approach, a fundamental challenge persists: roadside veget
   \label{fig:intensity_threshold}
 \end{figure}
 
-The window-based processing helps determine a locally optimal threshold value, though the result is not always ideal. This stage retained $3{,}317{,}369$ points.
+Two threshold selection strategies are considered for local intensity segmentation within each window.
+
+\subsubsection{Percentile-Based Thresholding}
+
+The percentile-based approach selects a threshold corresponding to the upper $x\%$ of intensity values within a local window, under the assumption that lane markings belong to the brightest subset of points. While computationally efficient, this method depends strongly on the chosen percentile and may not adapt well to varying intensity distributions.
+
+\subsubsection{Kapur Maximum-Entropy Thresholding}
+
+As an alternative, Kapur's maximum-entropy thresholding is employed~\cite{KAPUR1985273}. Although originally developed for image processing, the method operates solely on the statistical distribution of intensity values and requires no image structure; it can therefore be applied directly to LiDAR point clouds.
+
+Shannon entropy quantifies the amount of uncertainty in a probability distribution. For a discrete distribution with probabilities $p_1, p_2, \dots, p_n$, it is defined as
+\begin{equation}
+  H = -\sum_{i} p_i \log p_i.
+  \label{eq:shannon_entropy}
+\end{equation}
+A high entropy indicates a broad, uncertain distribution; a low entropy indicates a concentrated one.
+
+Kapur's method constructs a normalized histogram of intensity values within the local window. For every candidate threshold $t$, the histogram is split into two classes: \emph{background} (intensities $\leq t$) and \emph{foreground} (intensities $> t$). The intra-class probability distributions are normalized independently, and the Shannon entropy of each class, $H_b(t)$ and $H_f(t)$, is computed. The optimal threshold maximizes the total entropy across both classes:
+\begin{equation}
+  t^* = \arg\max_{t}\,\bigl(H_b(t) + H_f(t)\bigr).
+  \label{eq:kapur}
+\end{equation}
+Intuitively, the selected threshold is the one that yields the greatest information separation between the background and foreground groups. In the context of lane marking extraction, this produces a more adaptive threshold than a fixed percentile, particularly in regions where the intensity distribution is multimodal or affected by changing pavement conditions and environmental factors.
+
 
 \FloatBarrier
 \subsection{Road Surface Extraction}
@@ -594,7 +617,7 @@ Figure~\ref{fig:road_surface_final} shows the final road surface extraction resu
   \label{fig:road_surface_final}
 \end{figure}
 
-This stage retained $894{,}671$ points, representing less than $1\%$ of the original ${\sim}104$ million input points. This dramatic reduction demonstrates the effectiveness of the multi-stage filtering pipeline in isolating the relevant lane marking points for subsequent geometric fitting.
+This stage retained $894{,}671$ points, representing less than $1\%$ of the original ${\sim}104$ million input points. This substantial reduction demonstrates the effectiveness of the multi-stage filtering pipeline in isolating the relevant lane marking points for subsequent geometric fitting.
 
 \FloatBarrier
 %------------------------------------------------------------------
