@@ -6,7 +6,7 @@ This chapter evaluates the two main algorithmic contributions of the pipeline: t
 \section{Ground Truth Collection}
 \label{sec:eval_gt}
 
-Ground truth data was manually collected for both evaluation tasks. The vehicle trajectory ground truth covers approximately $4700\,\mathrm{m}$ of the recorded highway segment. Collection was made possible by the fact that the LiDAR sensor captured a partial scan of the vehicle's trunk during every rotation. The centroids of these trunk point clusters were extracted and used as ground truth positions of the vehicle/sensor. Since this method need not be perfectly precise---only sufficiently accurate to serve as a reference for algorithm comparison---it provides an adequate basis for evaluation.
+Ground truth data was manually collected for both evaluation tasks. The vehicle trajectory ground truth covers approximately $4700\,\mathrm{m}$ of the recorded highway segment. Collection was made possible by the fact that the LiDAR sensor captured a partial scan of the vehicle's trunk during every rotation. The centroids of these trunk point clusters were manually extracted and used as ground truth positions of the vehicle/sensor. Since this method need not be perfectly precise---only sufficiently accurate to serve as a reference for algorithm comparison---it provides an adequate basis for evaluation.
 
 The lane geometry ground truth spans more than $10\,\mathrm{km}$ of annotated lane boundaries, each labeled semantically as either \emph{solid} or \emph{dashed}. The geometries were extracted based on intensity values and saved to a GeoPackage file.
 
