@@ -87,6 +87,7 @@
 \NewDocumentCommand{\department}{m}{\newcommand{\deptname}{#1}}
 \NewDocumentCommand{\city}{m}{\newcommand{\cityname}{#1}}
 \NewDocumentCommand{\logo}{m}{\newcommand{\logofilename}{#1}}
+\NewDocumentCommand{\logotwo}{m}{\newcommand{\logotwofilename}{#1}}
 
 \DeclareDocumentCommand{\title}{m}{\newcommand{\thesistitle}{#1}\renewcommand{\@title}{#1}}
 \DeclareDocumentCommand{\date}{m}{\newcommand{\thesisyear}{#1}\renewcommand{\@date}{#1}}
@@ -490,17 +491,28 @@
 			% \end{tabular}
 
 			\begin{minipage}{0.2\textwidth}
-			\hspace*{1.3cm}
-			\includegraphics[width=\linewidth]{\logofilename}
+				\includegraphics[width=\linewidth]{\logofilename}
 			\end{minipage}
 			\hfill
-			\begin{minipage}{0.75\textwidth}
-				\hspace*{1cm}
-				\raggedright
-				\textsc{\Large \univname}\\
-				\hspace*{1cm}
-			\textsc{\Large \facname}
-			\end{minipage}
+			\ifdefined\logotwofilename
+				\begin{minipage}{0.5\textwidth}
+					\centering
+					\textsc{\Large \univname}\\
+					\textsc{\Large \facname}
+				\end{minipage}
+				\hfill
+				\begin{minipage}{0.2\textwidth}
+					\includegraphics[width=\linewidth]{\logotwofilename}
+				\end{minipage}
+			\else
+				\begin{minipage}{0.75\textwidth}
+					\hspace*{1cm}
+					\raggedright
+					\textsc{\Large \univname}\\
+					\hspace*{1cm}
+					\textsc{\Large \facname}
+				\end{minipage}
+			\fi
 
 			\vspace{3cm}
 			{\bf \LARGE \thesistitle \par}

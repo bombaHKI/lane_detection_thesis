@@ -11,6 +11,10 @@
 % See elteikthesis_minted.tex for example
 %\usepackage[newfloat]{minted}
 
+% Toggle: set \UPMtrue for UPM submission, \UPMfalse for ELTE
+\newif\ifUPM
+\UPMtrue % change to \UPMtrue for UPM university submission
+
 % Document's metadata
 \title{Lane Boundary Extraction from High-Density LiDAR Point Clouds for HD Mapping} % title
 \date{2026} % year of defense
@@ -20,17 +24,31 @@
 \degree{Data Science MSc}
 
 % Supervisor(s)' metadata
-\supervisor{Hajder Levente, Habil. Associate Professor} % internal supervisor's name and title
-\affiliation{Institute of Computer Science, Department of Algorithms and Their Applications, Eötvös Loránd University} % internal supervisor's affiliation
+\ifUPM
+	\supervisor{Alberto Mozo, Full Professor} % internal supervisor's name and title
+	\affiliation{Mathematical Modeling and Biocomputing Group, Universidad Politécnica de Madrid} % internal supervisor's affiliation
+\else
+	\supervisor{Hajder Levente, Habil. Associate Professor} % internal supervisor's name and title
+	\affiliation{Institute of Computer Science, Department of Algorithms and Their Applications, Eötvös Loránd University} % internal supervisor's affiliation
+\fi
 \extsupervisor{José Daniel Padrón, PhD} % external supervisor's name
 \extaffiliation{Data Science, Maps Advanced Analytics, TomTom N.V.} % external supervisor's affiliation
 
 % University's metadata
-\university{Eötvös Loránd University} % university's name
-\faculty{Faculty of Informatics} % faculty's name
-\department{} % department's name (required; leave empty if not applicable)
-\city{Budapest} % city
-\logo{elte_cimer_szines} % logo
+\ifUPM
+	\university{Universidad Politécnica de Madrid} % university's name
+	\faculty{Escuela Técnica Superior de Ingenieros Informáticos} % faculty's name
+	\department{} % department's name (required; leave empty if not applicable)
+	\city{Madrid} % city
+	\logo{upm_logo} % logo
+	\logotwo{etsiinf_logo} % second logo
+\else
+	\university{Eötvös Loránd University} % university's name
+	\faculty{Faculty of Informatics} % faculty's name
+	\department{} % department's name (required; leave empty if not applicable)
+	\city{Budapest} % city
+	\logo{elte_cimer_szines} % logo
+\fi
 
 % Add bibliography file
 \addbibresource{elteikthesis.bib}
@@ -88,10 +106,12 @@ The resulting vectorized lane representations enable scalable and precise cross-
 I would like to express my gratitude to TomTom N.V.~for the opportunity to work on this interesting topic within their Maps Advanced Analytics division.
 Their provision of hardware infrastructure, LiDAR datasets, and a stimulating research environment were instrumental in making this thesis possible.
 
+\ifUPM\else
 I am also grateful to my internal supervisor, Hajder Levente, for his patient guidance, insightful feedback, and support throughout the research and writing process.
 
 My friend Dávid deserves special thanks for his encouragement during the most challenging periods of this work, providing both moral support and perspective when needed.
 
+\fi
 Most importantly, I wish to extend my heartfelt appreciation to both my Mother and Father.
 Their constant support, encouragement, and belief in me throughout all my life and studies have been the foundation upon which this achievement stands.
 This thesis is, in many ways, a reflection of their dedication and love.
